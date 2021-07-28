@@ -14,6 +14,8 @@
 
 # define USAGE "./woody_woodpacker <file_to_pack>"
 
+# define SUCCESS 0
+# define ERROR 1
 # define GET_ALIGN16(x) ((x) % 16 ? 16 - (x) % 16 : 0)
 # define ALIGN16(x) ((x) + GET_ALIGN16((x)))
 

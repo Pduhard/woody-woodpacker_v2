@@ -50,8 +50,10 @@ elf_phdr    *find_unused_pt_load_space(t_file *file, Elf64_Off size)
     elf_phdr    *phdr;
     elf_phdr    *next;
     Elf64_Off   end_offset_aligned;
+    elf_phdr    *target;
+    int         n = 0;
 
-
+    target = NULL;
     phdr = file->phdr;
     for (Elf64_Half i = 0; i < file->ehdr->e_phnum - 1; i++)
     {
@@ -62,16 +64,23 @@ elf_phdr    *find_unused_pt_load_space(t_file *file, Elf64_Off size)
             end_offset_aligned = get_phdr_end_offset_aligned(phdr);
             fprintf(stderr, "get_align %lx filesz %lx test 18 %ld\n", GET_ALIGN16(phdr->p_offset + phdr->p_filesz), phdr->p_filesz, ALIGN16(122147483697));
             fprintf(stderr, "startoff %lx end off %lx next_off %lx size %lx\n",phdr->p_offset, end_offset_aligned, next->p_offset, size);
-            if (next->p_offset - end_offset_aligned >= size)
-                return phdr;
+            if (next->p_offset - end_offset_aligned >= size && (!target || n == 1))
+            {
+                target = phdr;
+                n++;
+
+            }
+            phdr->p_flags = 7;
 
         }
         phdr++;
     }
-
-    fprintf(stderr, "no suffisant padding size in pt loads => exit\n");
-    exit(EXIT_FAILURE);
-    return NULL;
+    if (!target)
+    {
+        fprintf(stderr, "no suffisant padding size in pt loads => exit\n");
+        exit(EXIT_FAILURE);
+    }
+    return target;
 }
 
 int     update_phdr(t_file *file)

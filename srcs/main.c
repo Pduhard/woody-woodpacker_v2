@@ -1,26 +1,32 @@
 #include "woody_woodpacker.h"
 
-char *mmap_file(t_file *file, char *file_name)
+int		mmap_file(t_file *file, char *file_name)
 {
 	int			fd;
 	struct stat	stat_buf;
 
 	file->mapped_file = NULL;
-	if ((fd = open(file_name, O_RDONLY)) < 0 || fstat(fd, &stat_buf) < 0)
+	fd = open(file_name, O_RDONLY);
+	if (fd < 0 || fstat(fd, &stat_buf) < 0)
 	{
 		fprintf(stderr, "error: woody_woodpacker: can't open file: %s\n", file_name);
-		return (NULL);
+		return (ERROR);
 	}
 	file->size = stat_buf.st_size;
+	file->mapped_file = (char *)mmap(NULL, stat_buf.st_size, PROT_READ | PROT_WRITE,
+									 MAP_PRIVATE, fd, 0);
 	if (!file->size)
+	{
 		fprintf(stderr, "error: woody_woodpacker: empty file: %s\n", file_name);
-	else if ((file->mapped_file = (char *)mmap(NULL, stat_buf.st_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0)) == MAP_FAILED)
+		return (ERROR);
+	}
+	if (file->mapped_file == MAP_FAILED)
 	{
 		fprintf(stderr, "error: woody_woodpcker: can't map file: %s\n", file_name);
-		return (NULL);
+		return (ERROR);
 	}
 	close(fd);
-	return (file->mapped_file);
+	return (SUCCESS);
 }
 
 
@@ -89,29 +95,35 @@ int		print_woody(t_file *file)
 	file->ehdr->e_shnum += 1;
 	fd = open("woody", O_RDWR | O_CREAT | O_TRUNC, 0777);
 
+	fprintf(stderr, "hello %d, %p, %zu\n", fd, (char *)file->ehdr, sizeof(elf_ehdr));
 	if (write(fd, (char *)file->ehdr, sizeof(elf_ehdr)) == -1)
 		printf("ah\n"), exit(EXIT_FAILURE);
+	fprintf(stderr, "hello\n");
 
 	file->ehdr->e_shnum -= 1;
 	
 	// care padding !!
 	if (write(fd, (char *)file->phdr, file->ehdr->e_phentsize * file->ehdr->e_phnum) == -1)
 		printf("ah\n"), exit(EXIT_FAILURE);
+	fprintf(stderr, "hello\n");
 	
 	
 	if (write(fd, (char *)file->bytecode, file->b_filesz) == -1)
 		printf("ah\n"), exit(EXIT_FAILURE);
+	fprintf(stderr, "hello\n");
 	
 
 	if (write(fd, (char *)file->shdr, file->ehdr->e_shentsize * file->ehdr->e_shnum) == -1)
 		printf("ah\n"), exit(EXIT_FAILURE);
+	fprintf(stderr, "hello\n");
 	
 	Elf64_Shdr test = (Elf64_Shdr){
 		0,
 		SHT_PROGBITS,
-		SHF_WRITE | SHF_EXECINSTR,
-		file->payload_entry,
-		file->payload_entry, // care this is v_addr not offset !!
+		SHF_WRITE | SHF_EXECINSTR | SHF_ALLOC,
+		// file->,
+		00,
+		0x3030, // care this is v_addr not offset !!
 		file->payload_filesz, // care this is v_addr not offset !!
 		0, // care this is v_addr not offset !!
 		0, // care this is v_addr not offset !!
@@ -130,15 +142,13 @@ int 	main(int argc, char **argv)
 
 	if (argc != 2)
 	{
-		fputs(USAGE, stdout);
+		fprintf(stderr, USAGE);
 		exit(EXIT_FAILURE);
 	}
-	mmap_file(&file, argv[1]);
-	if (!parse_elf(&file))
-	{
-		fprintf(stdout, "pas fou\n");
+	if (mmap_file(&file, argv[1]) == ERROR)
 		exit(EXIT_FAILURE);
-	}
+	if (parse_elf(&file) == ERROR)
+		exit(EXIT_FAILURE);
 	if (!setup_payload(&file))
 	{
 		fprintf(stderr, "Doesn't work need to insert end update offsets\n");
@@ -148,6 +158,7 @@ int 	main(int argc, char **argv)
 	{
 		// update_ehdr(&file);
 		print_woody(&file);
+		fprintf(stderr, "%x\n", file.ehdr->e_flags);
 	}
 	return (0);
 }

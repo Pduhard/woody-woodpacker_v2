@@ -12,19 +12,25 @@ g_payload_jmp_offset dd jmp_offset - payload
 section .text
 
 payload:
-  woody db "....WOODY.....", 10
+  woody db "....WOODY.....", 10, 0
   len equ $ - woody
 strt:
-  push rbp
-  mov rbp, rsp
-  sub rsp, 16
+  push rax
+  push rdi
+  push rsi
+  push rdx
+
   mov rdi, 1
   lea rsi, [rel woody]
   mov rdx, len
   mov rax, 0x01
   syscall
-  add rsp, 16
-  pop rbp
+
+  pop rdx
+  pop rsi
+  pop rdi
+  pop rax
+
 jmp_offset:
   jmp 0xffffffff
   ret

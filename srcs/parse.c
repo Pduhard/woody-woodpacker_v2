@@ -10,7 +10,7 @@ int     parse_elf(t_file *file)
     if (strncmp((char *)e_ident, ELFMAG, SELFMAG))
     {
         fprintf(stderr, "Wrong magic numbers, not an ELF file\n");
-        exit(EXIT_FAILURE);
+        return ERROR;
     }
 
     // File class byte
@@ -23,12 +23,12 @@ int     parse_elf(t_file *file)
     else if (e_ident[EI_CLASS] == ELFCLASS32)
     {
         fprintf(stderr, "32-bit objects are not supported\n");
-        exit(EXIT_FAILURE);
+        return ERROR;
     }
     else
     {
         fprintf(stderr, "Invalid file class byt index: %hhu\n", e_ident[EI_CLASS]);
-        exit(EXIT_FAILURE);
+        return ERROR;
     }
     parse_bytecode(file);
   
@@ -37,5 +37,5 @@ int     parse_elf(t_file *file)
     print_64ehdr(file);
     print_64phdr(file);
     print_64shdr(file);
-    return 1;
+    return SUCCESS;
 }
