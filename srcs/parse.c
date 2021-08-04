@@ -16,9 +16,9 @@ int     parse_elf(t_file *file)
     // File class byte
     if (e_ident[EI_CLASS] == ELFCLASS64)
     {
-        file->ehdr = parse_64ehdr(file);
-        file->phdr = parse_64phdr(file);
-        file->shdr = parse_64shdr(file);
+        file->ehdr = (Elf64_Ehdr *)file->mapped_file;
+        file->phdr = (Elf64_Phdr *)(file->mapped_file + file->ehdr->e_phoff);
+        file->shdr = (Elf64_Shdr *)(file->mapped_file + file->ehdr->e_shoff);
     }
     else if (e_ident[EI_CLASS] == ELFCLASS32)
     {

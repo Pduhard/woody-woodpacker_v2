@@ -94,39 +94,38 @@ int		print_woody(t_file *file)
 	
 	file->ehdr->e_shnum += 1;
 	fd = open("woody", O_RDWR | O_CREAT | O_TRUNC, 0777);
+	if (fd < 0)
+	{
+		fprintf(stderr, "can't open file woody for writing\n");
+		exit(EXIT_FAILURE);
+	}
 
-	fprintf(stderr, "hello %d, %p, %zu\n", fd, (char *)file->ehdr, sizeof(elf_ehdr));
-	if (write(fd, (char *)file->ehdr, sizeof(elf_ehdr)) == -1)
+	// fprintf(stderr, "hello %d, %p, %zu\n", fd, (char *)file->ehdr, sizeof(elf_ehdr));
+	if (write(fd, (char *)file->ehdr, file->size) == -1)
 		printf("ah\n"), exit(EXIT_FAILURE);
-	fprintf(stderr, "hello\n");
 
-	file->ehdr->e_shnum -= 1;
 	
 	// care padding !!
-	if (write(fd, (char *)file->phdr, file->ehdr->e_phentsize * file->ehdr->e_phnum) == -1)
-		printf("ah\n"), exit(EXIT_FAILURE);
-	fprintf(stderr, "hello\n");
+	// if (write(fd, (char *)file->phdr, ) == -1)
+		// printf("ah\n"), exit(EXIT_FAILURE);
 	
 	
-	if (write(fd, (char *)file->bytecode, file->b_filesz) == -1)
-		printf("ah\n"), exit(EXIT_FAILURE);
-	fprintf(stderr, "hello\n");
+	// if (write(fd, (char *)file->phdr + file->ehdr->e_phentsize * file->ehdr->e_phnum, file->b_filesz) == -1)
+	// 	printf("ah\n"), exit(EXIT_FAILURE);
 	
 
-	if (write(fd, (char *)file->shdr, file->ehdr->e_shentsize * file->ehdr->e_shnum) == -1)
-		printf("ah\n"), exit(EXIT_FAILURE);
-	fprintf(stderr, "hello\n");
+	// if (write(fd, (char *)file->shdr, file->ehdr->e_shentsize * file->ehdr->e_shnum) == -1)
+	// 	printf("ah\n"), exit(EXIT_FAILURE);
 	
 	Elf64_Shdr test = (Elf64_Shdr){
 		0,
 		SHT_PROGBITS,
 		SHF_WRITE | SHF_EXECINSTR | SHF_ALLOC,
-		// file->,
-		00,
-		0x3030, // care this is v_addr not offset !!
-		file->payload_filesz, // care this is v_addr not offset !!
-		0, // care this is v_addr not offset !!
-		0, // care this is v_addr not offset !!
+		file->payload_vaddr,
+		file->payload_offset,
+		file->payload_filesz,
+		0,
+		0,
 		16,
 		0		
 	};

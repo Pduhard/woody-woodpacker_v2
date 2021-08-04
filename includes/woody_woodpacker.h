@@ -16,6 +16,7 @@
 
 # define SUCCESS 0
 # define ERROR 1
+
 # define GET_ALIGN16(x) ((x) % 16 ? 16 - (x) % 16 : 0)
 # define ALIGN16(x) ((x) + GET_ALIGN16((x)))
 
@@ -24,7 +25,7 @@ typedef Elf64_Phdr elf_phdr;
 typedef Elf64_Shdr elf_shdr;
 
 extern unsigned int g_payload_len;
-extern unsigned int g_payload_offset;
+// extern unsigned int g_payload_offset;
 extern unsigned int g_payload_jmp_offset;
 
 typedef struct      s_file
@@ -34,13 +35,14 @@ typedef struct      s_file
     elf_ehdr        *ehdr;
     elf_phdr        *phdr;
     elf_shdr        *shdr;
-    char            *bytecode;
+    // char            *bytecode;
     Elf64_Off       b_offset;
     Elf64_Off       b_filesz;
     char            *payload;
-    elf_phdr        payload_phdr;
+    Elf64_Addr      payload_vaddr;
+    Elf64_Off       payload_offset;
     Elf64_Off       payload_filesz;
-    Elf64_Addr      payload_entry;
+    // Elf64_Addr      payload_entry;
     Elf64_Off       size;
 }                   t_file;
 

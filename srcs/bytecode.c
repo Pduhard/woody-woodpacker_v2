@@ -7,13 +7,13 @@ int     parse_bytecode(t_file *file)
         file->b_filesz = file->size - file->b_offset;
     else
         file->b_filesz = file->ehdr->e_shoff - file->b_offset;
-    file->bytecode = malloc(file->b_filesz);
-    if (!file->bytecode)
-    {
-        fprintf(stderr, "woody_woodpacker: malloc error %zu %zu\n", file->ehdr->e_shoff, file->b_offset);
-        exit(EXIT_FAILURE);
-    }
-    memcpy(file->bytecode, file->mapped_file + file->b_offset, file->b_filesz);
+    // file->bytecode = malloc(file->b_filesz);
+    // if (!file->bytecode)
+    // {
+    //     fprintf(stderr, "woody_woodpacker: malloc error %zu %zu\n", file->ehdr->e_shoff, file->b_offset);
+    //     exit(EXIT_FAILURE);
+    // }
+    // memcpy(file->bytecode, file->mapped_file + file->b_offset, file->b_filesz);
     return 0;
 }
 

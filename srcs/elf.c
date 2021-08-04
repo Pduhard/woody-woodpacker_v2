@@ -9,16 +9,16 @@ elf_ehdr    *parse_64ehdr(t_file *file)
     return ehdr;
 }
 
-int         update_ehdr(t_file *file)
-{
+// int         update_ehdr(t_file *file)
+// {
     // memcpy(file->bytecode + file->ehdr->e_entry - 0x318, file->payload, file->payload_filesz);
-    file->old_entry_point = file->ehdr->e_entry;
-    file->ehdr->e_entry = file->payload_phdr.p_vaddr;
+    // file->old_entry_point = file->ehdr->e_entry;
+    // file->ehdr->e_entry = file->payload_phdr.p_vaddr;
     // file->ehdr->e_shoff = 0x0;
     // file->ehdr->e_shnum = 0;
     // file->ehdr->e_shstrndx = 0;
-    return 0;
-}
+//     return 0;
+// }
 
 // int         update_ehdr(t_file *file)
 // // old version inject after all pt_load (not working)

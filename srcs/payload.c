@@ -1,62 +1,32 @@
 #include "woody_woodpacker.h"
 
-// 00004000  f3 0f 1e fa 55 ba 01 00  00 00 bf 01 00 00 00 48  |....U..........H|
-// 00004010  83 ec 10 64 48 8b 04 25  28 00 00 00 48 89 44 24  |...dH..%(...H.D$|
-// 00004020  08 31 c0 48 8d 6c 24 07  c6 44 24 07 38 48 89 ee  |.1.H.l$..D$.8H..|
-// 00004030  e8 9b f3 ff ff bf 01 00  00 00 ba 01 00 00 00 48  |...............H|
-// 00004040  89 ee c6 44 24 07 0a e8  84 f3 ff ff 31 ff e8 1d  |...D$.......1...|
-// 00004050  f4 ff ff 66 66 2e 0f 1f  84 00 00 00 00 00 66 90  |...ff.........f.|
-
-
-// void    payload()
-// {
-//     char c = '8';
-
-//     int ret = write(1, &c, 1);
-//     c = '\n';
-//     ret = write(1, &c, 1);
-//     exit(0);
-//     (void)ret;
-// }
-
 int     setup_payload(t_file *file)
 {
     elf_phdr    *phdr_infect;
-    // Elf64_Addr  p_vaddr;
-    Elf64_Off   end_offset_aligned;
+    Elf64_Off   jmp_offset;
     char        *payload_memaddr;
     Elf64_Off   old_entry_point_offset;
 
+    phdr_infect = find_unused_pt_load_space(file, g_payload_len);
+
     file->payload = (char *)payload;
     file->payload_filesz = g_payload_len;
-
-    phdr_infect = find_unused_pt_load_space(file, file->payload_filesz);
-
-    end_offset_aligned = get_phdr_end_offset_aligned(phdr_infect);
-    fprintf(stderr, "endofaligned: %lx,  check ! %lx \n", end_offset_aligned, ALIGN16(phdr_infect->p_filesz));
-    file->payload_entry = end_offset_aligned + phdr_infect->p_vaddr - phdr_infect->p_offset + g_payload_offset;
-    // file->payload_entry = end_offset_aligned + phdr_infect->p_vaddr - phdr_infect->p_offset;
-    fprintf(stderr, "p_filesz %lx p_memsz %lx p_flags %x\n", phdr_infect->p_filesz, phdr_infect->p_memsz, phdr_infect->p_flags);
+    file->payload_offset = ALIGN16(phdr_infect->p_offset + phdr_infect->p_filesz);
+    file->payload_vaddr = ALIGN16(phdr_infect->p_vaddr + phdr_infect->p_filesz);
+    
     phdr_infect->p_filesz = ALIGN16(phdr_infect->p_filesz) + file->payload_filesz;
     phdr_infect->p_memsz = ALIGN16(phdr_infect->p_memsz) + file->payload_filesz;
-    phdr_infect->p_flags = 7;
-
-    fprintf(stderr, "p_filesz %lx p_memsz %lx p_flags %x\n", phdr_infect->p_filesz, phdr_infect->p_memsz, phdr_infect->p_flags);
-    fprintf(stderr, "old %x new %x\n", g_payload_len, g_payload_offset);
 
     file->old_entry_point = file->ehdr->e_entry;
-    file->ehdr->e_entry = file->payload_entry;
-    fprintf(stderr, "%lx == %ux?\n", file->payload_entry, g_payload_offset);
+    file->ehdr->e_entry = file->payload_vaddr;
 
-    payload_memaddr = file->bytecode + (end_offset_aligned - sizeof(Elf64_Ehdr) - (file->ehdr->e_phentsize * file->ehdr->e_phnum));
+    payload_memaddr = file->mapped_file + file->payload_offset;
+    // payload_memaddr = file->bytecode + (file->payload_offset - sizeof(Elf64_Ehdr) - (file->ehdr->e_phentsize * file->ehdr->e_phnum));
+    jmp_offset = file->payload_vaddr + g_payload_jmp_offset;
+    old_entry_point_offset = file->old_entry_point - jmp_offset;
+
     memcpy(payload_memaddr, file->payload, file->payload_filesz);
-    old_entry_point_offset = file->old_entry_point - (file->payload_entry + g_payload_jmp_offset + 5) + g_payload_offset;
-    // old_entry_point_offset = file->old_entry_point - (file->ehdr->e_entry + 0x34) + 10;
-    memcpy(payload_memaddr + g_payload_jmp_offset + 1, (char *)&old_entry_point_offset, sizeof(Elf64_Off));
-
-    // fprintf(stderr, "jmp_offset %x, bytecode %hhu %hhu %hhu %hhu\n", g_payload_jmp_offset, *(payload_memaddr + 0x35), *(payload_memaddr + 0x36), *(payload_memaddr + 0x37), *(payload_memaddr + 0x38));
-
-    fprintf(stderr, "old %lx new %lx\n", file->old_entry_point, file->ehdr->e_entry);
+    memcpy(payload_memaddr + g_payload_jmp_offset - 4, (char *)&old_entry_point_offset, 4); // negative rip value for x86-64 jmp is 32bit 
 
     return 1;
 }
