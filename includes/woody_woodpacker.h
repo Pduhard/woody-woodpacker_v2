@@ -78,5 +78,6 @@ void    print_64phdr(t_file *file);
 void    print_64shdr(t_file *file);
 
 void    payload();
-void tst();
+void    blowfish_init(char *key);
+
 #endif

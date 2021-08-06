@@ -275,15 +275,59 @@ uint32_t original_s[4][256] = {
     }
 };
 
-void tst()
+
+uint32_t    feisel(uint32_t in)
 {
-    int fd = open("a", O_RDWR);
-    for (int i = 0; i < 18 * 4; i++)
+    // TODOOO
+    return 0;
+}
+
+uint64_t    blowfish_encrypt(uint64_t block, uint32_t p[18], uint32_t s[4][256])
+{
+    uint32_t    l;
+    uint32_t    r;
+
+    l = block >> 32;
+    r = block & 0xffffffff;
+    // l = block & 0x0123456789123456;
+    
+    for (int i = 0; i < 16; i++)
     {
-        dprintf(fd, "%c",((char *)original_p)[i]);
+        l = l ^ p[i];
+        r = r ^ feisel(l);
+        l ^= r;
+        r ^= l;
+        l ^= r;
     }
-    for (int i = 0; i < 4 * 256 * 4; i++)
+    printf("\n%x | %x  %lx\n", l, r, block);
+    return 0;
+}
+
+void    blowfish_init(char *key)
+{
+    size_t key_len;
+    uint32_t    p[18];
+    uint32_t    s[4][256];
+    uint32_t    ext_key[18];
+    char        *bext_key;
+
+    key_len = strlen(key);
+    if (key_len < 4 || key_len > 56)
     {
-        dprintf(fd, "%c",((char *)original_s)[i]);
+        fprintf(stderr, "blowfish error: key length should lie between 4 and 56 bytes\n");
+        exit(EXIT_FAILURE);
     }
+    
+    bext_key = (char *)ext_key;
+    for (int i = 0; i < 72; i++)
+        bext_key[i] = key[i % key_len];
+    
+    write(1, bext_key, 72);
+
+    for (int i = 0; i < 18; i++)
+        p[i] = original_p[i] ^ ext_key[i];
+
+    blowfish_encrypt(0x1023456789123456);
+    (void)p;
+    (void)s;
 }
