@@ -33,6 +33,7 @@ SRC			=	main.c		\
 				section.c	\
 				bytecode.c	\
 				payload.c	\
+				blowfish.c	\
 
 ASM_SRC		=	payload_asm.s	\
 

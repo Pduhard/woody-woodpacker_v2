@@ -12,10 +12,14 @@
 # include <string.h>
 # include <elf.h>
 
+# include "blowfish.h"
+
 # define USAGE "./woody_woodpacker <file_to_pack>"
 
 # define SUCCESS 0
 # define ERROR 1
+# define SECTION_TO_ENCRYPT    ".text"
+
 
 # define GET_ALIGN16(x) ((x) % 16 ? 16 - (x) % 16 : 0)
 # define ALIGN16(x) ((x) + GET_ALIGN16((x)))
@@ -42,8 +46,12 @@ typedef struct      s_file
     Elf64_Addr      payload_vaddr;
     Elf64_Off       payload_offset;
     Elf64_Off       payload_filesz;
+
     // Elf64_Addr      payload_entry;
     Elf64_Off       size;
+    Elf64_Shdr      *to_encrypt_shdr;
+    char            *strtab;
+    // Elf64_Shdr      *strtab_shdr;
 }                   t_file;
 
 
@@ -70,5 +78,5 @@ void    print_64phdr(t_file *file);
 void    print_64shdr(t_file *file);
 
 void    payload();
-
+void tst();
 #endif

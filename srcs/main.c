@@ -158,6 +158,8 @@ int 	main(int argc, char **argv)
 		// update_ehdr(&file);
 		print_woody(&file);
 		fprintf(stderr, "%x\n", file.ehdr->e_flags);
+
 	}
+	tst();
 	return (0);
 }
