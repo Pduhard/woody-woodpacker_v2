@@ -275,6 +275,72 @@ uint32_t original_s[4][256] = {
     }
 };
 
+/* Iterative Function to calculate (x^y)%p in O(log y) */
+int power(long long x, unsigned int y, int p)
+{
+    int res = 1;     // Initialize result
+ 
+    if (y == 0) return 1; // In case y is 0;
+    
+    x = x % p; // Update x if it is more than or
+                // equal to p
+  
+    if (x == 0) return 0; // In case x is divisible by p;
+ 
+    while (y > 0)
+    {
+        // If y is odd, multiply x with result
+        if (y & 1)
+            res = (res*x) % p;
+ 
+        // y must be even now
+        y = y>>1; // y = y/2
+        x = (x*x) % p;
+    }
+    return res;
+}
+
+double    sigma(int n, int a)
+{
+    double res = 0;
+    double nom = 1. / 16.;
+    double add = 1.;
+
+    for (int k = 0; k <= n; k++)
+    {
+        // fprintf(stderr, "expmod of 16 ^ (%d - %d) %% %d = %d\n", n, k, (8 * k + a), power(16, n - k, (8 * k + a)));
+        add = ((double)power(16, n - k, (8 * k + a)) / (double)(8 * k + a));
+        // fprintf(stderr, "------%d: %lf\n", a, res);
+        res += (add - (int)add);
+        res -= (int)res;
+        // fprintf(stderr, "------%d: %lf\n", a, res);
+    }
+    add = 1;
+    for (int k = n + 1; add > 0.0000001; k++)
+    {
+        nom = pow(16., (double)(n - k));
+        add = nom / (double)(8. * k + a);
+
+        // fprintf(stderr, "add:%lf\n", add);
+        res += add;
+    }
+    // fprintf(stderr, "sig : %lf\n", res);
+    return res - (int)(res);
+}
+
+uint32_t     bbp_getnth_term(int n)
+{
+
+    double res = 4. * sigma(n, 1) - 2. * sigma(n, 4) - sigma(n, 5) - sigma(n, 6);
+    // res = fabs(res);
+    res = res - (int)res;
+    if (res < 0)
+        res += 1.;
+
+    return (int)(16 * fabs(res - (int)res));
+
+}
+
 void    uint32_swap(uint32_t *a, uint32_t *b)
 {
     *a ^= *b;
@@ -397,6 +463,8 @@ void    blowfish_init(char *key)
     encr = blowfish_encrypt(0x1023456789123456, p, s);
     decr = blowfish_decrypt(encr, p, s);
     fprintf(stderr, "%lx %lx\n", encr, decr);
+    for (int i = 0; i < 10000; i++)
+        fprintf(stderr, "%x", bbp_getnth_term(i));
     (void)p;
     (void)s;
 }

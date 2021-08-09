@@ -11,7 +11,7 @@
 # include <stdio.h>
 # include <string.h>
 # include <elf.h>
-
+# include <math.h>
 # include "blowfish.h"
 
 # define USAGE "./woody_woodpacker <file_to_pack>"
