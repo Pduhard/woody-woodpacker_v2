@@ -275,10 +275,51 @@ uint32_t original_s[4][256] = {
     }
 };
 
-
-uint32_t    feisel(uint32_t in)
+void    uint32_swap(uint32_t *a, uint32_t *b)
 {
-    // TODOOO
+    *a ^= *b;
+    *b ^= *a;
+    *a ^= *b;
+}
+
+uint32_t    feisel(uint32_t in, uint32_t s[4][256])
+{
+    uint8_t    s0_key;
+    uint8_t    s1_key;
+    uint8_t    s2_key;
+    uint8_t    s3_key;
+
+    s0_key = (in & 0xff000000) >> 24;
+    s1_key = (in & 0xff0000) >> 16 ;
+    s2_key = (in & 0xff00) >> 8;
+    s3_key = in & 0xff;
+
+    // fprintf(stderr, "%hhx|%hhx|%hhx|%hhx == %x\n", s0_key, s1_key, s2_key, s3_key, in);
+    // (void)s;
+    return ((s[0][s0_key] + s[1][s1_key]) ^ s[2][s2_key]) + s[3][s3_key];
+}
+
+uint64_t    blowfish_decrypt(uint64_t block, uint32_t p[18], uint32_t s[4][256])
+{
+    uint32_t    l;
+    uint32_t    r;
+
+    l = block >> 32;
+    r = block & 0xffffffff;
+    // l = block & 0x0123456789123456;
+    
+    for (int i = 17; i > 1; i--)
+    {
+        l = l ^ p[i];
+        r = r ^ feisel(l, s);
+        uint32_swap(&l, &r);
+    }
+    uint32_swap(&l, &r);
+    l = l ^ p[0];
+    r = r ^ p[1];
+    
+    // printf("\n%x | %x  %lx\n", l, r, block);
+    return ((uint64_t)l << 32) | (uint64_t)r;
     return 0;
 }
 
@@ -291,16 +332,19 @@ uint64_t    blowfish_encrypt(uint64_t block, uint32_t p[18], uint32_t s[4][256])
     r = block & 0xffffffff;
     // l = block & 0x0123456789123456;
     
+    // fprintf(stderr, "hallo\n");
+    // printf("\n%x | %x  %lx %lx\n", l, r, block, ((uint64_t)l << 32) | (uint64_t)r);
     for (int i = 0; i < 16; i++)
     {
         l = l ^ p[i];
-        r = r ^ feisel(l);
-        l ^= r;
-        r ^= l;
-        l ^= r;
+        r = r ^ feisel(l, s);
+        uint32_swap(&l, &r);
     }
-    printf("\n%x | %x  %lx\n", l, r, block);
-    return 0;
+    uint32_swap(&l, &r);
+    l = l ^ p[17];
+    r = r ^ p[16];
+    // printf("\n%x | %x  %lx %lx\n", l, r, block, ((uint64_t)l << 32) | (uint64_t)r);
+    return ((uint64_t)l << 32) | (uint64_t)r;
 }
 
 void    blowfish_init(char *key)
@@ -322,12 +366,37 @@ void    blowfish_init(char *key)
     for (int i = 0; i < 72; i++)
         bext_key[i] = key[i % key_len];
     
-    write(1, bext_key, 72);
-
     for (int i = 0; i < 18; i++)
         p[i] = original_p[i] ^ ext_key[i];
+    
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 256; j++)
+            s[i][j] = original_s[i][j];
+    
 
-    blowfish_encrypt(0x1023456789123456);
+    uint64_t init_val = 0;
+    
+    for (int i = 0; i < 18; i += 2)
+    {
+        init_val = blowfish_encrypt(init_val, p, s);
+        p[i] = init_val >> 32;
+        p[i + 1] = init_val & 0xffffffff;
+    }
+    
+    for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 256; j += 2)
+        {
+            init_val = blowfish_encrypt(init_val, p, s);
+            s[i][j] = init_val >> 32;
+            s[i][j + 1] = init_val & 0xffffffff;
+        }
+
+
+    uint64_t encr, decr;
+
+    encr = blowfish_encrypt(0x1023456789123456, p, s);
+    decr = blowfish_decrypt(encr, p, s);
+    fprintf(stderr, "%lx %lx\n", encr, decr);
     (void)p;
     (void)s;
 }

@@ -160,6 +160,6 @@ int 	main(int argc, char **argv)
 		fprintf(stderr, "%x\n", file.ehdr->e_flags);
 
 	}
-	blowfish_init("bonjour");
+	blowfish_init("123456789");
 	return (0);
 }
