@@ -276,29 +276,30 @@ uint32_t original_s[4][256] = {
 };
 
 /* Iterative Function to calculate (x^y)%p in O(log y) */
-int power(long long x, unsigned int y, int p)
-{
-    int res = 1;     // Initialize result
- 
-    if (y == 0) return 1; // In case y is 0;
+// int power(long long x, unsigned int y, int p)
+// {
+//     int res = 1;     // Initialize result
+
+//     if (y == 0) return 1; // In case y is 0;
     
-    x = x % p; // Update x if it is more than or
-                // equal to p
+//     x = x % p; // Update x if it is more than or
+//                 // equal to p
   
-    if (x == 0) return 0; // In case x is divisible by p;
+//     if (x == 0) return 0; // In case x is divisible by p;
  
-    while (y > 0)
-    {
-        // If y is odd, multiply x with result
-        if (y & 1)
-            res = (res*x) % p;
+//     while (y > 0)
+//     {
+//         // If y is odd, multiply x with result
+//         if (y & 1)
+//             res = (res * x) % p;
  
-        // y must be even now
-        y = y>>1; // y = y/2
-        x = (x*x) % p;
-    }
-    return res;
-}
+//         // y must be even now
+//         y = y >> 1; // y = y/2
+//         x = (x * x) % p;
+//         fprintf(stderr, "x: %lld, y: %u\n", x, y);
+//     }
+//     return res;
+// }
 
 double    sigma(int n, int a)
 {
@@ -309,8 +310,12 @@ double    sigma(int n, int a)
     for (int k = 0; k <= n; k++)
     {
         // fprintf(stderr, "expmod of 16 ^ (%d - %d) %% %d = %d\n", n, k, (8 * k + a), power(16, n - k, (8 * k + a)));
+        // fprintf(stderr, "power %d %d %d\n", 16, n - k, (8 * k + a));
         add = ((double)power(16, n - k, (8 * k + a)) / (double)(8 * k + a));
+        // fprintf(stderr, "ok!: %d\n", power(16, n - k, (8 * k + a)));
         // fprintf(stderr, "------%d: %lf\n", a, res);
+        // if (n - k == 1)
+        //     exit(0);
         res += (add - (int)add);
         res -= (int)res;
         // fprintf(stderr, "------%d: %lf\n", a, res);

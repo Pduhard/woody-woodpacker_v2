@@ -70,7 +70,7 @@ Elf64_Off   get_phdr_end_offset_aligned(elf_phdr *phdr);
 
 int     setup_payload(t_file *file);
 
-int         update_ehdr(t_file *file);
+int     update_ehdr(t_file *file);
 int     update_phdr(t_file *file);
 
 void    print_64ehdr(t_file *file);
@@ -78,6 +78,12 @@ void    print_64phdr(t_file *file);
 void    print_64shdr(t_file *file);
 
 void    payload();
+
+int     power(long long x, unsigned int y, int p);
+double  get_floating_part(double n);
+
 void    blowfish_init(char *key);
+
+
 
 #endif
