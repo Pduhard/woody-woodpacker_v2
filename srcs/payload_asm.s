@@ -1,5 +1,8 @@
 [BITS 64]
 
+extern floor
+extern ceil
+
 global payload:function
 global power:function
 global get_floating_part:function
@@ -11,19 +14,61 @@ g_payload_jmp_offset dd jmp_offset - payload
 
 section .text
 
+
 payload:
 
 
 get_floating_part:
+  ; https://en.wikibooks.org/wiki/X86_Assembly/Floating_Point
   push rbp
   mov rbp, rsp
-  mov rdx, 0
-  mov rax, rdi
-  mov rdi, 1
-  div rdi
-  mov rax, rdx
+  ; sub rsp, 16
+
+  ; mov rax, 0
+
+  ; cvtsi2sd xmm0, 1
+  ; mov rax, xmm0
+  ; mov rax, rdi
+  movsd xmm1, xmm0
+  fld [rdi]
+  fld []
+  ; fcom xmm0, xmm1
+  ; fld xmm0
+  ; fld [tt]
+  ; fcom
+  ; fstsw	ax
+  ; and	ax, 100000000b
+  ; jnz g_ceil
+  call floor
+  subsd xmm1, xmm0
+
+  movsd xmm0, xmm1
   mov rsp, rbp
-  pop rbp	
+  pop rbp
+  ret
+  mov qword [rsp], rdi
+
+  cmp qword [rsp], 0
+  jl g_ceil
+
+g_floor:
+  mov rax, 0
+  mov rdi, qword [rsp]
+  call floor
+  sub rax, qword [rsp]
+  mov rax, qword [rsp]
+  mov rsp, rbp
+  pop rbp
+  ret
+
+g_ceil:
+  mov rax, 0
+  mov rdi, qword [rsp]
+  call ceil
+  sub qword [rsp], rax
+  mov rax, qword [rsp]
+  mov rsp, rbp
+  pop rbp
   ret
 ; int power(long long x, unsigned int y, int p)
 ; ===> (x ^ y) % p
@@ -121,6 +166,7 @@ woody_w:
 
   jmp 0xffffffff
 jmp_offset:
+  tt dd 0.0
   woody db "....WOODY.....", 10, 0
   len equ $ - woody
 end:

@@ -80,7 +80,7 @@ void    print_64shdr(t_file *file);
 void    payload();
 
 int     power(long long x, unsigned int y, int p);
-double  get_floating_part(double n);
+float  get_floating_part(float n);
 
 void    blowfish_init(char *key);
 
