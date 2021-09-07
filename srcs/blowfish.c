@@ -301,59 +301,64 @@ uint32_t original_s[4][256] = {
 //     return res;
 // }
 
-// float get_floating_part(float n)
+// double get_floating_part(double n)
 // {
-//     if (n < 0)
+//     if (n < 0.0)
 //         return n - ceil(n);
 //     return n - floor(n);
 // }
 
-float    sigma(int n, int a)
-{
-    float res = 0;
-    float nom = 1. / 16.;
-    float add = 1.;
+// double    _sigma(int n, int a)
+// {
+//     double res = 0;
+//     // double nom = 1. / 16.;
+//     double add = 1.;
 
-    for (int k = 0; k <= n; k++)
-    {
-        // fprintf(stderr, "expmod of 16 ^ (%d - %d) %% %d = %d\n", n, k, (8 * k + a), power(16, n - k, (8 * k + a)));
-        // fprintf(stderr, "power %d %d %d\n", 16, n - k, (8 * k + a));
-        add = ((float)power(16, n - k, (8 * k + a)) / (float)(8 * k + a));
-        // fprintf(stderr, "ok!: %d\n", power(16, n - k, (8 * k + a)));
-        // fprintf(stderr, "------%d: %lf\n", a, res);
-        // if (n - k == 1)
-        //     exit(0);
-        res += get_floating_part(add);
-        res = get_floating_part(res);
-        // res -= (int)res;
-        // fprintf(stderr, "------%d: %lf\n", a, res);
-    }
-    add = 1;
-    for (int k = n + 1; add > 0.0000001; k++)
-    {
-        nom = pow(16., (float)(n - k));
-        add = nom / (float)(8. * k + a);
+//     for (int k = 0; k <= n; k++)
+//     {
+//         // fprintf(stderr, "expmod of 16 ^ (%d - %d) %% %d = %d\n", n, k, (8 * k + a), power(16, n - k, (8 * k + a)));
+//         // fprintf(stderr, "power %d %d %d\n", 16, n - k, (8 * k + a));
+//         add = ((double)power(16, n - k, (8 * k + a)) / (double)(8 * k + a));
+//         fprintf(stderr, "ok!: %d %lf %lf \n", power(16, n - k, (8 * k + a)), (double)(8 * k + a), add);
+//         // fprintf(stderr, "------%d: %lf\n", a, res);
+//         // if (n - k == 1)
+//         //     exit(0);
+//     fprintf(stderr, "fpart of %f: %f\n", add, get_floating_part(add));
 
-        // fprintf(stderr, "add:%lf\n", add);
-        res += add;
-    }
-    // fprintf(stderr, "fpart of %f: %f\n", res, get_floating_part(res));
+//         res += get_floating_part(add);
+//     fprintf(stderr, "fpart of %f: %f\n", res, get_floating_part(res));
 
-    return get_floating_part(res);
-}
+//         res = get_floating_part(res);
+//         // res -= (int)res;
+//         // fprintf(stderr, "------%d: %lf\n", a, res);
+//     }
+//     // add = 1;
+//     // for (int k = n + 1; add > 0.0000001; k++)
+//     // {
+//     //     nom = pow(16., (double)(n - k));
+//     //     add = nom / (double)(8. * k + a);
+
+//     //     // fprintf(stderr, "add:%lf\n", add);
+//     //     res += add;
+//     // }
+//     // fprintf(stderr, "fpart of %f: %f\n", -1.2, get_floating_part(-1.2));
+//     // exit(0);
+//     return get_floating_part(res);
+// }
 //243f6a8885a308d313198a2e03707344a4093822299f31d0082efa98ec4e6c89452821e638d01377be5466cf34e90c6cc0ac29b7c97c50dd3f84d5b5b54709179216d5d98979fb1bd1310ba698dfb5ac2ffd72dbd01adfb7b8e1afed6a267e96ba7c9045f12c7f9924a19947b3916cf70801f2e2858efc16636920d871574e69a458fea3f4933d7e0d95748f728eb658718bcd5882154aee7b54a41dc25a59b59c30d5392af26013c5d1b023286085f0ca417918b8db38ef8e79dcb0603a180e6c9e0e8bb01e8a3ed71577c1bd314b2778af2fda55605c60e65525f3aa55ab945748986263e8144055ca396a2aab10b6b4cc5c341141e8cea15486af7c72e993b3ee1411636fbc2a2ba9c55d741831f6ce5c3e169b87931eafd6ba336c24cf5c7a325381289586773b8f48986b4bb9afc4bfe81b6628219361d809ccfb21a991487cac605dec8032ef845d5de98575b1dc262302eb651b8823893e81d396acc50f6d6ff383f442392e0b4482a484200469c8f04a9e1f9b5e21c66842f6e96c9a670c9c61abd388f06a51a0d2d8542f68960fa728ab5133a36eef0b6c137a3be4ba3bf0507efb2a98a1f1651d39af017666ca593e82430e888cee8619456f9fb47d84a5c33b8b5ebee06f75d885c12073401a449f56c16aa64ed3aa62363f77061bfedf72429b023d37d0d724d00a1248db0fead3
-uint32_t     bbp_getnth_term(int n)
-{
+// uint32_t     _bbp_getnth_term(int n)
+// {
+//     // fprintf(stderr, "sigma: %lf %lf\n", sigma(n, 1), _sigma(n, 1));
+//     // exit(0);
+//     double res = 4. * sigma(n, 1) - 2. * sigma(n, 4) - sigma(n, 5) - sigma(n, 6);
+//     // res = fabs(res);
+//     res = get_floating_part(res);
+//     if (res < 0)
+//         res += 1.;
 
-    float res = 4. * sigma(n, 1) - 2. * sigma(n, 4) - sigma(n, 5) - sigma(n, 6);
-    // res = fabs(res);
-    res = get_floating_part(res);
-    if (res < 0)
-        res += 1.;
+//     return (int)(16 * fabs(get_floating_part(res)));
 
-    return (int)(16 * fabs(get_floating_part(res)));
-
-}
+// }
 
 void    uint32_swap(uint32_t *a, uint32_t *b)
 {
