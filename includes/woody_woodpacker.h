@@ -31,6 +31,7 @@ typedef Elf64_Shdr elf_shdr;
 extern unsigned int g_payload_len;
 // extern unsigned int g_payload_offset;
 extern unsigned int g_payload_jmp_offset;
+extern unsigned int g_payload_start_offset;
 
 typedef struct      s_file
 {
@@ -87,6 +88,8 @@ uint32_t     bbp_getnth_term(int n);
 
 void    blowfish_init(char *key);
 
+void    uint32_swap(uint32_t *a, uint32_t *b);
+uint32_t    feisel(uint32_t in, uint32_t s[4][256]);
 
 
 #endif

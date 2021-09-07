@@ -360,14 +360,14 @@ uint32_t original_s[4][256] = {
 
 // }
 
-void    uint32_swap(uint32_t *a, uint32_t *b)
-{
-    *a ^= *b;
-    *b ^= *a;
-    *a ^= *b;
-}
+// void    uint32_swap(uint32_t *a, uint32_t *b)
+// {
+//     *a ^= *b;
+//     *b ^= *a;
+//     *a ^= *b;
+// }
 
-uint32_t    feisel(uint32_t in, uint32_t s[4][256])
+uint32_t    _feisel(uint32_t in, uint32_t s[4][256])
 {
     uint8_t    s0_key;
     uint8_t    s1_key;
@@ -379,7 +379,7 @@ uint32_t    feisel(uint32_t in, uint32_t s[4][256])
     s2_key = (in & 0xff00) >> 8;
     s3_key = in & 0xff;
 
-    // fprintf(stderr, "%hhx|%hhx|%hhx|%hhx == %x\n", s0_key, s1_key, s2_key, s3_key, in);
+    // fprintf(stderr, "%hhx|%hhx|%hhx|%hhx == %x %x %hhx %hx \n", s0_key, s1_key, s2_key, s3_key, in, 0x12345678, (char)0x12345678, (short)0x12345678 << 4);
     // (void)s;
     return ((s[0][s0_key] + s[1][s1_key]) ^ s[2][s2_key]) + s[3][s3_key];
 }
@@ -439,6 +439,8 @@ void    blowfish_init(char *key)
     uint32_t    s[4][256];
     uint32_t    ext_key[18];
     char        *bext_key;
+    // unsigned char        *p_fill;
+    // unsigned char        *s_fill;
 
     key_len = strlen(key);
     if (key_len < 4 || key_len > 56)
@@ -451,8 +453,25 @@ void    blowfish_init(char *key)
     for (int i = 0; i < 72; i++)
         bext_key[i] = key[i % key_len];
     
+    // p_fill = (unsigned char *)p;
+    // s_fill = (unsigned char *)s;
+    // int n = 0;
+    // for (int i = 0; i < 18 * 4; i++)
+    // {
+    //     p_fill[i] = (bbp_getnth_term(n) << 4) | (bbp_getnth_term(n + 1));
+    //     // fprintf(stderr, "%x", p_fill[i]);
+    //     n += 2;
+    // }
+    // // for (int i = 0; i < 4; i++)
+    // for (int i = 0; i < 256 * 4 * 4; i++)
+    // {
+    //     s_fill[i] = (bbp_getnth_term(n) << 4) | (bbp_getnth_term(n + 1));
+    //     // fprintf(stderr, "%x, %d\n", s_fill[i], i);
+    //     n += 2;
+    // }
+    
     for (int i = 0; i < 18; i++)
-        p[i] = original_p[i] ^ ext_key[i];
+        p[i] = original_p[i] ;//^ ext_key[i];
     
     for (int i = 0; i < 4; i++)
         for (int j = 0; j < 256; j++)
@@ -479,7 +498,7 @@ void    blowfish_init(char *key)
 
     uint64_t encr, decr;
 
-    encr = blowfish_encrypt(0x1023456789123456, p, s);
+    encr = blowfish_encrypt(0x4242424242424242, p, s);
     decr = blowfish_decrypt(encr, p, s);
     fprintf(stderr, "%lx %lx\n", encr, decr);
     for (int i = 0; i < 1000; i++)
