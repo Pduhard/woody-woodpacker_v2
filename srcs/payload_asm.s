@@ -12,6 +12,8 @@ global sigma:function
 global bbp_getnth_term:function
 global uint32_swap:function
 global feisel:function
+global blowfish_decrypt:function
+global blowfish_encrypt:function
 global g_payload_len:data
 global g_payload_jmp_offset:data
 global g_payload_start_offset:data
@@ -363,34 +365,169 @@ feisel:
   xor r8, r8
 
   mov ecx, dword [rsp]
+  shl rcx, 2
   mov rax, rsi
   add rax, rcx
 
   mov r8d, dword [rax]
 
   mov ecx, dword [rsp + 4]
+  shl rcx, 2
   mov rax, rsi
-  add rax, 256
+  add rax, 1024
   add rax, rcx
 
   add r8d, dword [rax]
   
   mov ecx, dword [rsp + 8]
+  shl rcx, 2
   mov rax, rsi
-  add rax, 512
+  add rax, 2048
   add rax, rcx
 
   xor r8d, dword [rax]
 
   mov ecx, dword [rsp + 12]
+  shl rcx, 2
   mov rax, rsi
-  add rax, 768
+  add rax, 3072
   add rax, rcx
 
   add r8d, dword [rax]
 
   mov eax, r8d
 
+  mov rsp, rbp
+  pop rbp
+  ret
+
+blowfish_decrypt:
+  push rbp
+  mov rbp, rsp
+  sub rsp, 32
+
+  mov rax, rdi
+  shr rax, 32
+  mov dword [rsp], eax
+  mov dword [rsp + 4], edi
+
+  mov qword [rsp + 8], 17
+  mov qword [rsp + 16], rsi
+  mov qword [rsp + 24], rdx
+
+blowfish_decrypt_loop:
+  cmp qword [rsp + 8], 1
+  jle blowfish_decrypt_end_loop
+
+  mov rax, qword [rsp + 8]
+  shl rax, 2
+  add rax, qword [rsp + 16]
+  mov eax, dword [rax]
+  xor eax, dword [rsp]
+  mov dword [rsp], eax
+
+  mov edi, dword [rsp]
+  mov rsi, qword [rsp + 24]
+  call feisel
+  xor eax, dword [rsp + 4]
+  mov dword [rsp + 4], eax
+
+  mov rdi, rsp
+  mov rsi, rsp
+  add rsi, 4
+  call uint32_swap
+
+  dec qword [rsp + 8]
+  jmp blowfish_decrypt_loop
+
+blowfish_decrypt_end_loop:
+  mov rdi, rsp
+  mov rsi, rsp
+  add rsi, 4
+  call uint32_swap
+  
+  mov rax, qword [rsp + 16]
+  mov eax, dword [rax]
+  xor eax, dword [rsp]
+  mov dword [rsp], eax
+
+  mov rax, qword [rsp + 16]
+  add rax, 4
+  mov eax, dword [rax]
+  xor eax, dword [rsp + 4]
+  mov dword [rsp + 4], eax
+
+  mov eax, dword [rsp]
+  shl rax, 32
+  xor rdi, rdi
+  mov edi, dword [rsp + 4] 
+  or rax, rdi
+  mov rsp, rbp
+  pop rbp
+  ret
+
+blowfish_encrypt:
+  push rbp
+  mov rbp, rsp
+  sub rsp, 32
+
+  mov rax, rdi
+  shr rax, 32
+  mov dword [rsp], eax
+  mov dword [rsp + 4], edi
+
+  mov qword [rsp + 8], 0
+  mov qword [rsp + 16], rsi
+  mov qword [rsp + 24], rdx
+
+blowfish_encrypt_loop:
+  cmp qword [rsp + 8], 16
+  jge blowfish_encrypt_end_loop
+
+  mov rax, qword [rsp + 8]
+  shl rax, 2
+  add rax, qword [rsp + 16]
+  mov eax, dword [rax]
+  xor eax, dword [rsp]
+  mov dword [rsp], eax
+
+  mov edi, dword [rsp]
+  mov rsi, qword [rsp + 24]
+  call feisel
+  xor eax, dword [rsp + 4]
+  mov dword [rsp + 4], eax
+
+  mov rdi, rsp
+  mov rsi, rsp
+  add rsi, 4
+  call uint32_swap
+
+  inc qword [rsp + 8]
+  jmp blowfish_encrypt_loop
+
+blowfish_encrypt_end_loop:
+  mov rdi, rsp
+  mov rsi, rsp
+  add rsi, 4
+  call uint32_swap
+  
+  mov rax, qword [rsp + 16]
+  add rax, 68
+  mov eax, dword [rax]
+  xor eax, dword [rsp]
+  mov dword [rsp], eax
+
+  mov rax, qword [rsp + 16]
+  add rax, 64
+  mov eax, dword [rax]
+  xor eax, dword [rsp + 4]
+  mov dword [rsp + 4], eax
+
+  mov eax, dword [rsp]
+  shl rax, 32
+  xor rdi, rdi
+  mov edi, dword [rsp + 4] 
+  or rax, rdi
   mov rsp, rbp
   pop rbp
   ret

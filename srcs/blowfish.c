@@ -367,24 +367,24 @@ uint32_t original_s[4][256] = {
 //     *a ^= *b;
 // }
 
-uint32_t    _feisel(uint32_t in, uint32_t s[4][256])
-{
-    uint8_t    s0_key;
-    uint8_t    s1_key;
-    uint8_t    s2_key;
-    uint8_t    s3_key;
+// uint32_t    _feisel(uint32_t in, uint32_t s[4][256])
+// {
+//     uint8_t    s0_key;
+//     uint8_t    s1_key;
+//     uint8_t    s2_key;
+//     uint8_t    s3_key;
 
-    s0_key = (in & 0xff000000) >> 24;
-    s1_key = (in & 0xff0000) >> 16 ;
-    s2_key = (in & 0xff00) >> 8;
-    s3_key = in & 0xff;
+//     s0_key = (in & 0xff000000) >> 24;
+//     s1_key = (in & 0xff0000) >> 16 ;
+//     s2_key = (in & 0xff00) >> 8;
+//     s3_key = in & 0xff;
 
-    // fprintf(stderr, "%hhx|%hhx|%hhx|%hhx == %x %x %hhx %hx \n", s0_key, s1_key, s2_key, s3_key, in, 0x12345678, (char)0x12345678, (short)0x12345678 << 4);
-    // (void)s;
-    return ((s[0][s0_key] + s[1][s1_key]) ^ s[2][s2_key]) + s[3][s3_key];
-}
+//     // fprintf(stderr, "%hhx|%hhx|%hhx|%hhx == %x %x %hhx %hx \n", s0_key, s1_key, s2_key, s3_key, in, 0x12345678, (char)0x12345678, (short)0x12345678 << 4);
+//     // (void)s;
+//     return ((s[0][s0_key] + s[1][s1_key]) ^ s[2][s2_key]) + s[3][s3_key];
+// }
 
-uint64_t    blowfish_decrypt(uint64_t block, uint32_t p[18], uint32_t s[4][256])
+uint64_t    _blowfish_decrypt(uint64_t block, uint32_t p[18], uint32_t s[4][256])
 {
     uint32_t    l;
     uint32_t    r;
@@ -408,7 +408,7 @@ uint64_t    blowfish_decrypt(uint64_t block, uint32_t p[18], uint32_t s[4][256])
     return 0;
 }
 
-uint64_t    blowfish_encrypt(uint64_t block, uint32_t p[18], uint32_t s[4][256])
+uint64_t    _blowfish_encrypt(uint64_t block, uint32_t p[18], uint32_t s[4][256])
 {
     uint32_t    l;
     uint32_t    r;
@@ -496,11 +496,13 @@ void    blowfish_init(char *key)
         }
 
 
-    uint64_t encr, decr;
+    uint64_t encr, encr_tr, decr, decr_tr;
 
     encr = blowfish_encrypt(0x4242424242424242, p, s);
-    decr = blowfish_decrypt(encr, p, s);
-    fprintf(stderr, "%lx %lx\n", encr, decr);
+    encr_tr = _blowfish_encrypt(0x4242424242424242, p, s);
+    decr = blowfish_decrypt(encr_tr, p, s);
+    decr_tr = _blowfish_decrypt(encr_tr, p, s);
+    fprintf(stderr, "%lx==%lx %lx==%lx\n", encr, encr_tr, decr, decr_tr);
     for (int i = 0; i < 1000; i++)
         fprintf(stderr, "%x", bbp_getnth_term(i));
     // printf("\n%f %f\n", floor(1.2f), ceil(-1.2f));

@@ -90,6 +90,8 @@ void    blowfish_init(char *key);
 
 void    uint32_swap(uint32_t *a, uint32_t *b);
 uint32_t    feisel(uint32_t in, uint32_t s[4][256]);
+uint64_t    blowfish_decrypt(uint64_t block, uint32_t p[18], uint32_t s[4][256]);
+uint64_t    blowfish_encrypt(uint64_t block, uint32_t p[18], uint32_t s[4][256]);
 
 
 #endif
