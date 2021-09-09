@@ -435,7 +435,7 @@ uint64_t    _blowfish_encrypt(uint64_t block, uint32_t p[18], uint32_t s[4][256]
 void    _blowfish_init(char *key, uint32_t p[18], uint32_t s[4][256])
 {
     size_t          key_len;
-    unsigned char   bbp_terms[1024];
+    unsigned char   bbp_terms[128];
     unsigned char   *p_fill;
     unsigned char   *s_fill;
     int             n = 0;
@@ -447,7 +447,7 @@ void    _blowfish_init(char *key, uint32_t p[18], uint32_t s[4][256])
     
     p_fill = (unsigned char *)p;
     s_fill = (unsigned char *)s;
-    for (int i = 0; i < 1024; i++)
+    for (int i = 0; i < 128; i++)
         bbp_terms[i] = bbp_getnth_term(i);
     for (int i = 0; i < 72; i++)
     {
@@ -455,9 +455,9 @@ void    _blowfish_init(char *key, uint32_t p[18], uint32_t s[4][256])
         
         if (key)
             p_fill[i] ^= key[i % key_len];
-        fprintf(stderr, "%x %d\n", p_fill[i], i);
+        // fprintf(stderr, "%x %d\n", p_fill[i], i);
         n += 2;
-        n %= 1024;
+        n %= 128;
     }
     // for (int i = 0; i < 4; i++)
     for (int i = 0; i < 4096; i++)
@@ -465,7 +465,7 @@ void    _blowfish_init(char *key, uint32_t p[18], uint32_t s[4][256])
         s_fill[i] = ((bbp_terms[n]) << 4) | ((bbp_terms[n + 1]));
         // fprintf(stderr, "%x, %d\n", s_fill[i], i);
         n += 2;
-        n %= 1024;
+        n %= 128;
     }
 
     

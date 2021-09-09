@@ -609,20 +609,22 @@ bbp_p_fill_loop_start:
   add rax, 1
   or cl, byte [rax]
 
-  mov rax, qword [rsp + 8]
-  add rax, qword [rsp + 32]
-  mov byte [rax], cl
-
-  lea rdi, [p_format]
-  mov sil, byte [rax]
-  mov rdx, qword [rsp + 32]
-  call printf
+  mov r8, qword [rsp + 8]
+  add r8, qword [rsp + 32]
+  mov byte [r8], cl
 
   cmp qword [rsp], 0x0
   je p_fill_loop_no_key
 
-  ; //////// TO DO 
-;    !!!!!!!! p_fill[i] ^= key[i % key_len];
+  mov rdx, 0
+  mov rax, qword [rsp + 32]
+  mov rdi, qword [rsp + 24]
+  div rdi
+  mov rax, qword [rsp]
+  add rax, rdx
+  mov al, byte [rax]
+
+  xor byte [r8], al
 
 p_fill_loop_no_key:
 
@@ -672,6 +674,7 @@ bbp_s_fill_loop_start:
 
   inc qword [rsp + 32]
   jmp bbp_s_fill_loop_start
+
 bbp_s_fill_loop_end:
 
 
@@ -775,7 +778,7 @@ jmp_offset:
   tt dd 0.3
   woody db "....WOODY.....", 10, 0
   len equ $ - woody
-  _pi_cap dq 1024
+  _pi_cap dq 128
   encrypted_sec_start dq 0
   encrypted_sec_end dq 0
   checksum dq 0
