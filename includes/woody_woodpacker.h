@@ -53,6 +53,7 @@ typedef struct      s_file
     Elf64_Shdr      *to_encrypt_shdr;
     char            *strtab;
     // Elf64_Shdr      *strtab_shdr;
+    char            *encryption_key;
 }                   t_file;
 
 
@@ -67,6 +68,8 @@ elf_phdr    *get_last_pt_load(t_file *file);
 char    *empty_bytecode_space(t_file *file, Elf64_Off payload_size);
 
 elf_phdr    *find_unused_pt_load_space(t_file *file, Elf64_Off size);
+elf_shdr    *find_section_to_encrypt(t_file *file);
+
 Elf64_Off   get_phdr_end_offset_aligned(elf_phdr *phdr);
 
 int     setup_payload(t_file *file);
@@ -86,7 +89,9 @@ double    sigma(int n, int a);
 uint32_t     bbp_getnth_term(int n);
 
 
-void    blowfish_init(char *key);
+void    blowfish_run(char *key);
+void    blowfish_init(char *key, uint32_t p[18], uint32_t s[4][256]);
+
 
 void    uint32_swap(uint32_t *a, uint32_t *b);
 uint32_t    feisel(uint32_t in, uint32_t s[4][256]);

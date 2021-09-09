@@ -432,53 +432,42 @@ uint64_t    _blowfish_encrypt(uint64_t block, uint32_t p[18], uint32_t s[4][256]
     return ((uint64_t)l << 32) | (uint64_t)r;
 }
 
-void    blowfish_init(char *key)
+void    _blowfish_init(char *key, uint32_t p[18], uint32_t s[4][256])
 {
-    size_t key_len;
-    uint32_t    p[18];
-    uint32_t    s[4][256];
-    uint32_t    ext_key[18];
-    char        *bext_key;
-    // unsigned char        *p_fill;
-    // unsigned char        *s_fill;
+    size_t          key_len;
+    unsigned char   bbp_terms[1024];
+    unsigned char   *p_fill;
+    unsigned char   *s_fill;
+    int             n = 0;
+    uint64_t        init_val = 0;
 
-    key_len = strlen(key);
-    if (key_len < 4 || key_len > 56)
-    {
-        fprintf(stderr, "blowfish error: key length should lie between 4 and 56 bytes\n");
-        exit(EXIT_FAILURE);
-    }
+    // fprintf(stderr, "%zu\n", sizeof(size_t));
+    if (key)
+        key_len = strlen(key);
     
-    bext_key = (char *)ext_key;
+    p_fill = (unsigned char *)p;
+    s_fill = (unsigned char *)s;
+    for (int i = 0; i < 1024; i++)
+        bbp_terms[i] = bbp_getnth_term(i);
     for (int i = 0; i < 72; i++)
-        bext_key[i] = key[i % key_len];
-    
-    // p_fill = (unsigned char *)p;
-    // s_fill = (unsigned char *)s;
-    // int n = 0;
-    // for (int i = 0; i < 18 * 4; i++)
-    // {
-    //     p_fill[i] = (bbp_getnth_term(n) << 4) | (bbp_getnth_term(n + 1));
-    //     // fprintf(stderr, "%x", p_fill[i]);
-    //     n += 2;
-    // }
-    // // for (int i = 0; i < 4; i++)
-    // for (int i = 0; i < 256 * 4 * 4; i++)
-    // {
-    //     s_fill[i] = (bbp_getnth_term(n) << 4) | (bbp_getnth_term(n + 1));
-    //     // fprintf(stderr, "%x, %d\n", s_fill[i], i);
-    //     n += 2;
-    // }
-    
-    for (int i = 0; i < 18; i++)
-        p[i] = original_p[i] ;//^ ext_key[i];
-    
-    for (int i = 0; i < 4; i++)
-        for (int j = 0; j < 256; j++)
-            s[i][j] = original_s[i][j];
-    
+    {
+        p_fill[i] = ((bbp_terms[n]) << 4) | ((bbp_terms[n + 1]));
+        
+        if (key)
+            p_fill[i] ^= key[i % key_len];
+        fprintf(stderr, "%x %d\n", p_fill[i], i);
+        n += 2;
+        n %= 1024;
+    }
+    // for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4096; i++)
+    {
+        s_fill[i] = ((bbp_terms[n]) << 4) | ((bbp_terms[n + 1]));
+        // fprintf(stderr, "%x, %d\n", s_fill[i], i);
+        n += 2;
+        n %= 1024;
+    }
 
-    uint64_t init_val = 0;
     
     for (int i = 0; i < 18; i += 2)
     {
@@ -494,17 +483,35 @@ void    blowfish_init(char *key)
             s[i][j] = init_val >> 32;
             s[i][j + 1] = init_val & 0xffffffff;
         }
+}
 
+void    blowfish_run(char *key)
+{
+    size_t      key_len;
+    uint32_t    p[18];
+    uint32_t    s[4][256];
+    
+    if (key)
+    {
+        key_len = strlen(key);
+        if (key_len < 8 || key_len > 56)
+        {
+            fprintf(stderr, "blowfish error: key length should lie between 4 and 56 bytes\n");
+            exit(EXIT_FAILURE);
+        }
+    }
 
+    uint64_t    data = key ? *((uint64_t *)key) : 0x4242424242424242;
+    blowfish_init(key, p, s);
     uint64_t encr, encr_tr, decr, decr_tr;
 
-    encr = blowfish_encrypt(0x4242424242424242, p, s);
-    encr_tr = _blowfish_encrypt(0x4242424242424242, p, s);
+    encr = blowfish_encrypt(data, p, s);
+    encr_tr = _blowfish_encrypt(data, p, s);
     decr = blowfish_decrypt(encr_tr, p, s);
     decr_tr = _blowfish_decrypt(encr_tr, p, s);
-    fprintf(stderr, "%lx==%lx %lx==%lx\n", encr, encr_tr, decr, decr_tr);
-    for (int i = 0; i < 1000; i++)
-        fprintf(stderr, "%x", bbp_getnth_term(i));
+    fprintf(stderr, "key: %s, %lx==%lx %lx==%lx\n", key, encr, encr_tr, decr, decr_tr);
+    // for (int i = 0; i < 1000; i++)
+        // fprintf(stderr, "%x", bbp_getnth_term(i));
     // printf("\n%f %f\n", floor(1.2f), ceil(-1.2f));
     // printf("%f %f\n", floor(1.5f), ceil(-1.5f));
     // printf("%f %f\n", floor(1.8f), ceil(-1.8f));

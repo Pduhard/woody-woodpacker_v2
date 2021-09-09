@@ -9,6 +9,25 @@ elf_shdr    *parse_64shdr(t_file *file)
     return shdr;
 }
 
+// elf_shdr    *find_section_to_encrypt(t_file *file)
+// {
+//     Elf64_Shdr *shdr;
+//     Elf64_Shdr *shdr_str_table;
+//     char        *str_table;
+
+//     shdr = file->shdr;
+//     shdr_str_table = (Elf64_Shdr *)(file->mapped_file + file->ehdr->e_shoff + file->ehdr->e_shstrndx * sizeof(Elf64_Shdr));
+//     str_table = file->mapped_file + shdr_str_table->sh_offset;
+
+//     for (Elf64_Half i = 0; i < file->ehdr->e_shnum; i++)
+//     {
+//         if (!strcmp(str_table + shdr->sh_name, SECTION_TO_ENCRYPT))
+//             return shdr;
+//         shdr++;
+//     }
+//     return NULL;
+// }
+
 void    print_64shdr(t_file *file)
 {
     Elf64_Shdr *shdr;
