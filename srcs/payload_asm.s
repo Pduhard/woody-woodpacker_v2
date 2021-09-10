@@ -1,15 +1,17 @@
 [BITS 64]
 
-extern floor
-extern ceil
-extern pow
-extern fabs
-extern strlen
-extern printf
+; extern floor
+; extern ceil
+; extern pow
+; extern fabs
+; extern strlen
+; extern printf
+; extern scanf
 
 global payload:function
 global power:function
 global get_floating_part:function
+; global get_floating_part:function
 global sigma:function
 global bbp_getnth_term:function
 global uint32_swap:function
@@ -20,46 +22,75 @@ global blowfish_init:function
 global g_payload_len:data
 global g_payload_jmp_offset:data
 global g_payload_start_offset:data
+global g_payload_checksum_offset:data
+global g_payload_encrypted_sec_start_offset:data
+global g_payload_encrypted_sec_end_off_offset:data
+global bbp_call_rip:data
 
 g_payload_len dd end - payload
 g_payload_jmp_offset dd jmp_offset - payload
 g_payload_start_offset dd woody_w - payload
+g_payload_checksum_offset dd checksum_offset - payload
+g_payload_encrypted_sec_start_offset dd encrypted_sec_start_offset - payload
+g_payload_encrypted_sec_end_off_offset dd encrypted_sec_end_off_offset - payload
 
 section .text
 
 payload:
 
+_strlen:
+
+  push rbp
+  mov rbp, rsp
+
+  mov rax, 0
+
+strlen_loop_start:
+  cmp byte [rdi + rax], 0
+  je strlen_loop_end
+  
+  inc rax
+  jmp strlen_loop_start
+  
+strlen_loop_end:
+  mov rsp, rbp
+  pop rbp
+  ret
+
+_fabs:
+  push rbp
+  mov rbp, rsp
+
+  pxor xmm1, xmm1
+  comisd xmm0, xmm1
+  jnbe _fabs_ret
+
+  movsd xmm1, [rel _m1]
+  mulsd xmm0, xmm1
+
+_fabs_ret:
+  mov rsp, rbp
+  pop rbp
+  ret
+
 get_floating_part:
-    ; https://en.wikibooks.org/wiki/X86_Assembly/Floating_Point
-    push rbp
-    mov rbp, rsp
-    sub rsp, 16
+  push rbp
+  mov rbp, rsp
 
-    movsd qword [rsp + 8], xmm0
-    pxor xmm0, xmm0
-    comisd xmm0, [rsp + 8] 
-    jbe g_floor
+  cvtsd2si rax, xmm0
+  cvtsi2sd xmm1, rax
 
-  g_ceil:
-    movsd xmm0, qword [rsp + 8]
-    call ceil
-    movsd xmm1, qword [rsp + 8]
-    subsd xmm1, xmm0
-    movsd xmm0, xmm1
-    mov rsp, rbp
-    pop rbp
-    ret
+  subsd xmm0, xmm1
 
-  g_floor:
-    movsd xmm0, qword [rsp + 8]
-    call floor
-    movsd xmm1, qword [rsp + 8]
-    subsd xmm1, xmm0
-    movsd xmm0, xmm1
-    mov rsp, rbp
-    pop rbp
-    ret
+  pxor xmm1, xmm1
+  comisd xmm0, xmm1
+  jnbe get_floating_part_end
+  addsd xmm0, [rel _1]
 
+get_floating_part_end:
+  mov rsp, rbp
+  pop rbp
+  ret
 
 ; int power(long long x, unsigned int y, int p)
 ; ===> (x ^ y) % p
@@ -146,9 +177,9 @@ sigma:
 
     pxor xmm0, xmm0
     movsd qword [rsp], xmm0 ; res
-    movsd xmm0, [_1_16]
+    movsd xmm0, [rel _1_16]
     movsd qword [rsp + 8], xmm0; nom
-    movsd xmm0, [_1]
+    movsd xmm0, [rel _1]
     movsd qword [rsp + 16], xmm0; add
 
     mov qword [rsp + 24], 0; k
@@ -198,26 +229,19 @@ sigma:
 
   sig_loop_1_end:
 
-    movsd xmm0, [_1]
+    movsd xmm0, [rel _1]
     movsd qword [rsp + 16], xmm0; add = 1
 
     inc qword [rsp + 24]
 
   sig_loop_2:
     movsd xmm0, qword [rsp + 16] 
-    movsd xmm1, [_0001]
+    movsd xmm1, [rel _0001]
     comisd xmm0, xmm1
     jmp sig_loop_2_end
 
-    movsd xmm0, [_16]
-    
-    mov rax, qword [rsp + 32]
-    sub rax, qword [rsp + 24]
-
-    cvtsi2sd xmm1, rax
-
-    call pow
-
+    movsd xmm0, qword [rsp + 8]
+    mulsd xmm0, [rel _1_16]
     movsd qword [rsp + 8], xmm0
 
     mov rdx, 0
@@ -257,7 +281,7 @@ bbp_getnth_term:
     mov rsi, 1
     call sigma
 
-    movsd xmm1, [_4]
+    movsd xmm1, [rel _4]
     mulsd xmm0, xmm1
 
     movsd qword [rsp + 8], xmm0; res
@@ -266,7 +290,7 @@ bbp_getnth_term:
     mov rsi, 4
     call sigma
 
-    movsd xmm1, [_2]
+    movsd xmm1, [rel _2]
     mulsd xmm0, xmm1
 
     movsd xmm1, qword [rsp + 8]
@@ -296,14 +320,14 @@ bbp_getnth_term:
     comisd xmm1, xmm0
     jbe bbp_ret
 
-    movsd xmm1, [_1]
+    movsd xmm1, [rel _1]
     addsd xmm0, xmm1
 
   bbp_ret:
 
     call get_floating_part
-    call fabs
-    movsd xmm1, [_16]
+    call _fabs
+    movsd xmm1, [rel _16]
     mulsd xmm0, xmm1
     movsd qword [rsp + 8], xmm0
     call get_floating_part
@@ -542,7 +566,7 @@ blowfish_init:
   
 
   mov rax, 80
-  add rax, qword [_pi_cap]
+  add rax, qword [rel _pi_cap]
   sub rsp, rax
 
   mov qword [rsp], rdi ; key
@@ -554,7 +578,7 @@ blowfish_init:
   cmp qword [rsp], 0x0
   je no_strlen
 
-  call strlen
+  call _strlen
   mov qword [rsp + 24], rax ; key len 
 
 no_strlen:
@@ -570,7 +594,7 @@ no_strlen:
 
   
 bbp_init_loop_start:
-  mov rax, [_pi_cap]
+  mov rax, [rel _pi_cap]
   cmp qword [rsp + 32], rax
   jge bbp_init_loop_end
 
@@ -632,7 +656,7 @@ p_fill_loop_no_key:
 
   mov rdx, 0
   mov rax, qword [rsp + 48]
-  mov rdi, [_pi_cap]
+  mov rdi, [rel _pi_cap]
   div rdi
   mov qword [rsp + 48], rdx
 
@@ -668,7 +692,7 @@ bbp_s_fill_loop_start:
 
   mov rdx, 0
   mov rax, qword [rsp + 48]
-  mov rdi, [_pi_cap]
+  mov rdi, [rel _pi_cap]
   div rdi
   mov qword [rsp + 48], rdx
 
@@ -742,18 +766,129 @@ bbp_s_cross_loop_end:
   ret
 
 woody_w:
+  push rbp
+  mov rbp, rsp
   push rax
   push rdi
   push rsi
   push rdx
 
+  sub rsp, 4256
+
+  cmp dword [rel checksum], 0
+  je woody_no_key
+
+  mov rdi, 1
+  lea rsi, [rel key_ask]
+  mov rdx, len_key_ask
+  mov rax, 0x01
+  syscall
+
+  mov rdi, 0
+  mov rsi, rsp
+  mov rdx, 64
+  mov rax, 0x0
+  syscall
+
+  add rax, rsp
+  sub rax, 1
+  mov byte [rax], 0
   
+  mov rdi, rsp
+  mov rsi, rsp
+  add rsi, 64
+  mov rdx, rsp
+  add rdx, 136
+
+  call -641 ; //blowfish init
+
+  mov rdi, qword [rsp]
+  mov rsi, rsp
+  add rsi, 64
+  mov rdx, rsp
+  add rdx, 136
+
+  call -854 ; //blowfish_encrypt
+
+  ; mov rdi, 0x93c7659fb496b86c
+  cmp rax, qword [rel checksum]
+  jne nok_start
+
+  mov rdi, 1
+  lea rsi, [rel ok]
+  mov rdx, len_ok
+  mov rax, 0x01
+  syscall 
+  jmp nok_end
+nok_start:
+
+  mov rdi, 1
+  lea rsi, [rel nok]
+  mov rdx, len_nok
+  mov rax, 0x01
+  syscall
+
+  mov rdi, 1
+  mov rax, 60
+  syscall
+
+nok_end:
+
+  jmp woody_decrypt
+
+woody_no_key:
+
+
+  mov rdi, rsp
+  mov rsi, rsp
+  add rsi, 64
+  mov rdx, rsp
+  add rdx, 136
+
+bbp_getnth_term_offset:
+  call -628 ; //blowfish init
+
+woody_decrypt:
+
+  mov qword [rsp + 4240], 0
+
+woody_decrypt_loop:
+  mov rax, [rel encrypted_sec_end_off]
+  cmp qword [rsp + 4240], rax
+  jge woody_decrypt_loop_end
+
+  ; iciiiiiii
+
+  add qword [rsp + 4240], 8
+  jmp woody_decrypt_loop
+woody_decrypt_loop_end:
+
+  ; mov rdi, rax
+  ; mov rax, 60
+
+  ; syscall
+
+  ; call blowfish_encrypt
+  ; mov rax [rel encrypted_sec_start]
+  ; mov rsi, rsp
+
+  ; mov edi, bbp_call_rip
+  ; add rdi, rip
+; bbp_getnth_term_offset:
+  ; mov eax, 
+  ; call -1342
+  ; [rel bbp_call_rip]
   ; ask for key
   ; init blowfish
   ; verify checksum
   ; bad ==> exit
-  ; decrypt section from encrypted_sec_start to encrypted_sec_end
+  ; decrypt section from encrypted_sec_start to encrypted_sec_en_offd
 
+  mov rdi, 1
+  mov rsi, rsp
+  mov rdx, 9
+  mov rax, 0x01
+  syscall
 
   mov rdi, 1
   lea rsi, [rel woody]
@@ -761,12 +896,18 @@ woody_w:
   mov rax, 0x01
   syscall
 
+  
+
+  add rsp, 4256
   pop rdx
   pop rsi
   pop rdi
   pop rax
 
+  mov rsp, rbp
+  pop rbp
   jmp 0xffffffff
+
 jmp_offset:
   _0001 dq 0.0001
   _0 dq 0.0
@@ -775,13 +916,23 @@ jmp_offset:
   _4 dq 4.0
   _1_16 dq 0.0625
   _16 dq 16.0
+  _m1 dq -1.0
   tt dd 0.3
   woody db "....WOODY.....", 10, 0
   len equ $ - woody
   _pi_cap dq 128
+encrypted_sec_start_offset:
   encrypted_sec_start dq 0
-  encrypted_sec_end dq 0
+encrypted_sec_end_off_offset:
+  encrypted_sec_end_off dq 0
+checksum_offset:
   checksum dq 0
-  p_format db "%hhx i: %ld", 10, 0
+  key_ask db "password: ", 0
+  len_key_ask equ $ - key_ask
+  ok db "OK!", 10, 0
+  len_ok equ $ - ok
+  nok db "Wrong password", 10, 0
+  len_nok equ $ - nok
+  bbp_call_rip dd blowfish_encrypt - bbp_getnth_term_offset - 1
 end:
 

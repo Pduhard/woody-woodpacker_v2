@@ -32,6 +32,10 @@ extern unsigned int g_payload_len;
 // extern unsigned int g_payload_offset;
 extern unsigned int g_payload_jmp_offset;
 extern unsigned int g_payload_start_offset;
+extern unsigned int g_payload_checksum_offset;
+extern unsigned int g_payload_encrypted_sec_start_offset;
+extern unsigned int g_payload_encrypted_sec_end_off_offset;
+extern int bbp_call_rip;
 
 typedef struct      s_file
 {
@@ -51,9 +55,11 @@ typedef struct      s_file
     // Elf64_Addr      payload_entry;
     Elf64_Off       size;
     Elf64_Shdr      *to_encrypt_shdr;
+    // Elf64_Shdr      *to_encrypt_shdr;
     char            *strtab;
     // Elf64_Shdr      *strtab_shdr;
     char            *encryption_key;
+    uint64_t        checksum;
 }                   t_file;
 
 
@@ -81,10 +87,14 @@ void    print_64ehdr(t_file *file);
 void    print_64phdr(t_file *file);
 void    print_64shdr(t_file *file);
 
+int encrypt_program(t_file *file);
+
+
 void    payload();
 
 int     power(long long x, unsigned int y, int p);
 double  get_floating_part(double n);
+double  test_get_floating_part(double n);
 double    sigma(int n, int a);
 uint32_t     bbp_getnth_term(int n);
 

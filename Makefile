@@ -32,6 +32,7 @@ SRC			=	main.c		\
 				segment.c	\
 				section.c	\
 				bytecode.c	\
+				encrypt.c	\
 				payload.c	\
 				blowfish.c	\
 

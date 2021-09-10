@@ -135,11 +135,50 @@ int		print_woody(t_file *file)
 	return 1;
 }
 
+char	*parse_key(char *key)
+{
+	size_t	key_len;
+
+	if (!key)
+		return NULL;
+	key_len = strlen(key);
+	if (key_len < 8 || key_len > 56)
+	{
+		fprintf(stderr, "Encryption key length should lie between 8 and 56 bytes\n");
+		return NULL;
+	}
+	return key;
+}
+
+char 	*parse_options(t_file *file, char **argv)
+{
+	int i;
+	char	*file_name;
+
+	file->encryption_key = NULL;
+	i = 1;
+	while (argv[i])
+	{
+		if (!strcmp("-key", argv[i]))
+		{
+			if (!(file->encryption_key = parse_key(argv[i + 1])))
+				return NULL;
+			i++;
+		}
+		else
+			file_name = argv[i];
+		i++;
+	}
+	return file_name;
+}
+
 int 	main(int argc, char **argv)
 {
 	t_file	file;
+	char	*file_name;
 
-	if (argc != 2)
+	(void)argc;
+	if (!(file_name = parse_options(&file, argv)))
 	{
 		fprintf(stderr, USAGE);
 		exit(EXIT_FAILURE);
@@ -147,6 +186,8 @@ int 	main(int argc, char **argv)
 	if (mmap_file(&file, argv[1]) == ERROR)
 		exit(EXIT_FAILURE);
 	if (parse_elf(&file) == ERROR)
+		exit(EXIT_FAILURE);
+	if (encrypt_program(&file) == ERROR)
 		exit(EXIT_FAILURE);
 	if (!setup_payload(&file))
 	{
@@ -160,7 +201,9 @@ int 	main(int argc, char **argv)
 		fprintf(stderr, "%x\n", file.ehdr->e_flags);
 
 	}
-	blowfish_run("123456789");
 	// blowfish_run(NULL);
+	fprintf(stderr, "bbp call rip %d %x\n ", bbp_call_rip, bbp_call_rip);
+	blowfish_run("123456789");
+	// fprintf(stderr, "%lf %lf\n ", 1.2, test_get_floating_part(1.2));
 	return (0);
 }
