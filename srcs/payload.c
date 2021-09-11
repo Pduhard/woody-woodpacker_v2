@@ -33,24 +33,42 @@ int     setup_payload(t_file *file)
     file->old_entry_point = file->ehdr->e_entry;
     file->ehdr->e_entry = file->payload_vaddr + g_payload_start_offset;
 
+    fprintf(stderr, "old entry %lx nex entry %lx\n", file->old_entry_point, file->ehdr->e_entry);
     payload_memaddr = file->mapped_file + file->payload_offset;
     // payload_memaddr = file->bytecode + (file->payload_offset - sizeof(Elf64_Ehdr) - (file->ehdr->e_phentsize * file->ehdr->e_phnum));
     jmp_offset = file->payload_vaddr + g_payload_jmp_offset;
     old_entry_point_offset = file->old_entry_point - jmp_offset;
 
+
+    fprintf(stderr, "section to encrypt:\toffset: %lx, size: %lx\n",
+        file->to_encrypt_shdr->sh_offset,
+        file->to_encrypt_shdr->sh_size);
     // init blowfish
     // encrypt .Text section
     // save .text section start - end at encrypted_sec_start - encrypted_sec_end
     // save key encrypted at asm checksum to verify key and file sanity after decrypt
 
+    fprintf(stderr, "%p %p %lx", payload_memaddr, file->payload, file->payload_filesz);
     memcpy(payload_memaddr, file->payload, file->payload_filesz);
+    
+    fprintf(stderr, "section to encrypt:\toffset: %lx, size: %lx\n",
+        file->to_encrypt_shdr->sh_offset,
+        file->to_encrypt_shdr->sh_size);
+    
     memcpy(payload_memaddr + g_payload_jmp_offset - 4, (char *)&old_entry_point_offset, 4); // negative rip value for x86-64 jmp is 32bit 
+    
+    fprintf(stderr, "section to encrypt:\toffset: %lx, size: %lx\n",
+        file->to_encrypt_shdr->sh_offset,
+        file->to_encrypt_shdr->sh_size);
     if (file->encryption_key)
         memcpy(payload_memaddr + g_payload_checksum_offset, (char *)(&file->checksum), 8); // negative rip value for x86-64 jmp is 32bit 
     
-    fprintf(stderr, "%lx %lx\n, ", file->to_encrypt_shdr->sh_addr, file->to_encrypt_shdr->sh_addr + file->to_encrypt_shdr->sh_size);
-    memcpy(payload_memaddr + g_payload_encrypted_sec_start_offset, (char *)(&file->to_encrypt_shdr->sh_addr), 8); // negative rip value for x86-64 jmp is 32bit 
-    memcpy(payload_memaddr + g_payload_encrypted_sec_end_off_offset, (char *)(&file->to_encrypt_shdr->sh_offset), 8); // negative rip value for x86-64 jmp is 32bit 
+    fprintf(stderr, "lol: %lx %lx\n, ", file->to_encrypt_shdr->sh_addr, file->to_encrypt_shdr->sh_size);
+    Elf64_Addr  encryption_start;
+
+    encryption_start = file->to_encrypt_shdr->sh_addr | (Elf64_Addr)0x400000;
+    memcpy(payload_memaddr + g_payload_encrypted_sec_start_offset, (char *)(&encryption_start), 8); // negative rip value for x86-64 jmp is 32bit 
+    memcpy(payload_memaddr + g_payload_encrypted_sec_end_off_offset, (char *)(&file->to_encrypt_shdr->sh_size), 8); // negative rip value for x86-64 jmp is 32bit 
     
     return 1;
 }

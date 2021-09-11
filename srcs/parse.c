@@ -14,6 +14,7 @@ elf_shdr    *find_section_to_encrypt(t_file *file)
             return curr;
         curr += 1;
     }
+    exit(0);
     return NULL;
 }
 
