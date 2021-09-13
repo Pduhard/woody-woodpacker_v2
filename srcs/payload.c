@@ -25,7 +25,7 @@ int     setup_payload(t_file *file)
     file->payload = (char *)payload;
     file->payload_filesz = g_payload_len;
     file->payload_offset = ALIGN16(phdr_infect->p_offset + phdr_infect->p_filesz);
-    file->payload_vaddr = ALIGN16(phdr_infect->p_vaddr + phdr_infect->p_filesz);
+    file->payload_vaddr = ALIGN16(phdr_infect->p_vaddr + phdr_infect->p_memsz);
     
     phdr_infect->p_filesz = ALIGN16(phdr_infect->p_filesz) + file->payload_filesz;
     phdr_infect->p_memsz = ALIGN16(phdr_infect->p_memsz) + file->payload_filesz;
@@ -33,7 +33,7 @@ int     setup_payload(t_file *file)
     file->old_entry_point = file->ehdr->e_entry;
     file->ehdr->e_entry = file->payload_vaddr + g_payload_start_offset;
 
-    fprintf(stderr, "old entry %lx nex entry %lx\n", file->old_entry_point, file->ehdr->e_entry);
+    fprintf(stderr, "old entry %lx nex entry %lx payload off %lx\n", file->old_entry_point, file->ehdr->e_entry, file->payload_offset);
     payload_memaddr = file->mapped_file + file->payload_offset;
     // payload_memaddr = file->bytecode + (file->payload_offset - sizeof(Elf64_Ehdr) - (file->ehdr->e_phentsize * file->ehdr->e_phnum));
     jmp_offset = file->payload_vaddr + g_payload_jmp_offset;
@@ -66,7 +66,7 @@ int     setup_payload(t_file *file)
     fprintf(stderr, "lol: %lx %lx\n, ", file->to_encrypt_shdr->sh_addr, file->to_encrypt_shdr->sh_size);
     Elf64_Addr  encryption_start;
 
-    encryption_start = file->to_encrypt_shdr->sh_addr | (Elf64_Addr)0x400000;
+    encryption_start = file->to_encrypt_shdr->sh_addr;
     memcpy(payload_memaddr + g_payload_encrypted_sec_start_offset, (char *)(&encryption_start), 8); // negative rip value for x86-64 jmp is 32bit 
     memcpy(payload_memaddr + g_payload_encrypted_sec_end_off_offset, (char *)(&file->to_encrypt_shdr->sh_size), 8); // negative rip value for x86-64 jmp is 32bit 
     

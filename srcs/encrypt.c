@@ -16,9 +16,10 @@ int encrypt_program(t_file *file)
         file->to_encrypt_shdr->sh_offset,
         file->to_encrypt_shdr->sh_size);
     // fprintf(stderr, "bkey=%lx tst %.8s\n", blowfish_encrypt(*((uint64_t *)file->encryption_key), p, s), file->encryption_key);
+    
     for (Elf64_Xword  i = 0; i < file->to_encrypt_shdr->sh_size; i += 8)
     {
-        // *datas = blowfish_encrypt(*datas, p, s);
+        *datas = blowfish_encrypt(*datas, p, s);
         datas++;
     }
     if (file->encryption_key)

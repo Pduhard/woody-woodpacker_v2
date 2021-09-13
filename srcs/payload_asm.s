@@ -775,7 +775,7 @@ woody_w:
 
   sub rsp, 4256
 
-  jmp woody_decrypt_loop_end
+  ; jmp woody_decrypt_loop_end
 
   cmp dword [rel checksum], 0
   je woody_no_key
@@ -810,6 +810,7 @@ woody_w:
   mov rdx, rsp
   add rdx, 136
 
+bbp_getnth_term_offset:
   call -854 ; //blowfish_encrypt
 
   ; mov rdi, 0x93c7659fb496b86c
@@ -869,7 +870,6 @@ woody_decrypt_loop:
   mov rdx, rsp
   add rdx, 136
 
-bbp_getnth_term_offset:
   call -1212 ; blowfish_decrypt
 
   mov rdi, qword [rsp + 4248]
@@ -950,6 +950,6 @@ checksum_offset:
   len_ok equ $ - ok
   nok db "Wrong password", 10, 0
   len_nok equ $ - nok
-  bbp_call_rip dd blowfish_decrypt - bbp_getnth_term_offset - 1
+  bbp_call_rip dd blowfish_encrypt - bbp_getnth_term_offset - 1
 end:
 
