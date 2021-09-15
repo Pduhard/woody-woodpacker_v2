@@ -63,11 +63,11 @@ elf_phdr    *find_unused_pt_load_space(t_file *file, Elf64_Off size)
 
             end_offset_aligned = get_phdr_end_offset_aligned(phdr);
             fprintf(stderr, "get_align %lx filesz %lx\n", GET_ALIGN16(phdr->p_offset + phdr->p_filesz), phdr->p_filesz);
-            fprintf(stderr, "startoff %lx end off %lx next_off %lx size %lx\n",phdr->p_offset, end_offset_aligned, next->p_offset, size);
+            fprintf(stderr, "startoff %lx vaddr %lx end off %lx next_off %lx size %lx\n",phdr->p_offset, phdr->p_vaddr, end_offset_aligned, next->p_offset, size);
             
             fprintf(stderr, "available size: %lx, payload size: %lx\n", next->p_offset - end_offset_aligned, size);
 
-            if (next->p_offset - end_offset_aligned >= size && !target)
+            if (next->p_offset - end_offset_aligned >= size && (!target || n == 8))
             {
                 fprintf(stderr, "THIS ONE!\n");
                 target = phdr;

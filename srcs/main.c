@@ -150,18 +150,44 @@ char	*parse_key(char *key)
 	return key;
 }
 
+int (*parse_encryption_algorithm(char *name))(t_file *file)
+{
+	char	*algo_names[2] = {
+		"blowfish",
+		"xor"
+	};
+	int		(*algo_table[2])(t_file *) = {
+		&blowfish_encryption,
+		&xor_encryption
+	};
+
+	for (int i = 0; i < 2; i++)
+	{
+		if (!strcmp(algo_names[i], name))
+			return algo_table[i];
+	}
+	return NULL;
+}
+
 char 	*parse_options(t_file *file, char **argv)
 {
 	int i;
 	char	*file_name;
 
 	file->encryption_key = NULL;
+	file->encrypt = NULL;
 	i = 1;
 	while (argv[i])
 	{
-		if (!strcmp("-key", argv[i]))
+		if (!strcmp("-k", argv[i]) || !strcmp("--key", argv[i]))
 		{
 			if (!(file->encryption_key = parse_key(argv[i + 1])))
+				return NULL;
+			i++;
+		}
+		else if (!strcmp("-e", argv[i]) || !strcmp("--encryption", argv[i]))
+		{
+			if (!(file->encrypt = parse_encryption_algorithm(argv[i + 1])))
 				return NULL;
 			i++;
 		}
@@ -169,6 +195,8 @@ char 	*parse_options(t_file *file, char **argv)
 			file_name = argv[i];
 		i++;
 	}
+	if (!file->encrypt)
+		file->encrypt = parse_encryption_algorithm(DEFAULT_ENCRYPTION_ALGORITHM);
 	return file_name;
 }
 
@@ -187,7 +215,7 @@ int 	main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	if (parse_elf(&file) == ERROR)
 		exit(EXIT_FAILURE);
-	if (encrypt_program(&file) == ERROR)
+	if (file.encrypt(&file) == ERROR)
 		exit(EXIT_FAILURE);
 	if (!setup_payload(&file))
 	{
@@ -202,8 +230,8 @@ int 	main(int argc, char **argv)
 
 	}
 	// blowfish_run(NULL);
-	fprintf(stderr, "bbp call rip %d %x\n ", bbp_call_rip, bbp_call_rip);
-	blowfish_run("123456789");
+	// fprintf(stderr, "bbp call rip %d %x\n ", bbp_call_rip, bbp_call_rip);
+	// blowfish_run("123456789");
 	// fprintf(stderr, "%lf %lf\n ", 1.2, test_get_floating_part(1.2));
 	return (0);
 }

@@ -36,7 +36,8 @@ SRC			=	main.c		\
 				payload.c	\
 				blowfish.c	\
 
-ASM_SRC		=	payload_asm.s	\
+ASM_SRC		=	blowfish_payload.s	\
+				xor_payload.s		\
 
 BIN			=	$(SRC:.c=.o)
 ASM_BIN		=	$(ASM_SRC:.s=.o)

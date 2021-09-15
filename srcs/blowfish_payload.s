@@ -856,29 +856,29 @@ woody_decrypt:
   mov rax, [rel encrypted_sec_start]
   mov qword [rsp + 4248], rax
 
-woody_decrypt_loop:
-  mov rax, [rel encrypted_sec_end_off]
-  cmp qword [rsp + 4240], rax
-  jge woody_decrypt_loop_end
+; woody_decrypt_loop:
+;   mov rax, [rel encrypted_sec_end_off]
+;   cmp qword [rsp + 4240], rax
+;   jge woody_decrypt_loop_end
 
-  mov rax, qword [rsp + 4248]
-  mov rdi, qword [rax]
+;   mov rax, qword [rsp + 4248]
+;   mov rdi, qword [rax]
 
-  mov rsi, rsp
-  add rsi, 64
+;   mov rsi, rsp
+;   add rsi, 64
 
-  mov rdx, rsp
-  add rdx, 136
+;   mov rdx, rsp
+;   add rdx, 136
 
-  call -1212 ; blowfish_decrypt
+;   call -1212 ; blowfish_decrypt
 
-  mov rdi, qword [rsp + 4248]
-  mov qword [rdi], rax
+;   mov rdi, qword [rsp + 4248]
+;   mov qword [rdi], rax
   
-  add qword [rsp + 4240], 8
-  add qword [rsp + 4248], 8
-  jmp woody_decrypt_loop
-woody_decrypt_loop_end:
+;   add qword [rsp + 4240], 8
+;   add qword [rsp + 4248], 8
+;   jmp woody_decrypt_loop
+; woody_decrypt_loop_end:
 
   ; mov rdi, rax
   ; mov rax, 60

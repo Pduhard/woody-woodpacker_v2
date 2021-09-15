@@ -16,10 +16,12 @@
 
 # define USAGE "./woody_woodpacker <file_to_pack>"
 
+
 # define SUCCESS 0
 # define ERROR 1
 # define SECTION_TO_ENCRYPT    ".text"
 
+#define DEFAULT_ENCRYPTION_ALGORITHM    "xor"
 
 # define GET_ALIGN16(x) ((x) % 16 ? 16 - (x) % 16 : 0)
 # define ALIGN16(x) ((x) + GET_ALIGN16((x)))
@@ -28,14 +30,28 @@ typedef Elf64_Ehdr elf_ehdr;
 typedef Elf64_Phdr elf_phdr;
 typedef Elf64_Shdr elf_shdr;
 
-extern unsigned int g_payload_len;
+/*
+** blowfish payload vars
+*/
+
 // extern unsigned int g_payload_offset;
+extern unsigned int g_payload_len;
 extern unsigned int g_payload_jmp_offset;
 extern unsigned int g_payload_start_offset;
 extern unsigned int g_payload_checksum_offset;
 extern unsigned int g_payload_encrypted_sec_start_offset;
 extern unsigned int g_payload_encrypted_sec_end_off_offset;
 extern int bbp_call_rip;
+
+/*
+** xor payload vars
+*/
+
+extern unsigned int g_xor_pld_len;
+extern unsigned int g_xor_pld_entry_off;
+extern unsigned int g_xor_pld_jmp_off;
+extern unsigned int g_xor_pld_sec_vaddr_off;
+extern unsigned int g_xor_pld_sec_size_off;
 
 typedef struct      s_file
 {
@@ -60,6 +76,16 @@ typedef struct      s_file
     // Elf64_Shdr      *strtab_shdr;
     char            *encryption_key;
     uint64_t        checksum;
+    int             (*encrypt)(struct s_file*);
+
+
+    uint32_t        pld_len;
+    uint32_t        pld_entry_off;
+    uint32_t        pld_jmp_off;
+    uint32_t        pld_sec_vaddr_off;
+    uint32_t        pld_sec_size_off;
+
+    uint32_t        pld_checksum_off;
 }                   t_file;
 
 
@@ -87,10 +113,12 @@ void    print_64ehdr(t_file *file);
 void    print_64phdr(t_file *file);
 void    print_64shdr(t_file *file);
 
-int encrypt_program(t_file *file);
+int blowfish_encryption(t_file *file);
+int xor_encryption(t_file *file);
 
 
 void    payload();
+void    xor_payload();
 
 int     power(long long x, unsigned int y, int p);
 double  get_floating_part(double n);
