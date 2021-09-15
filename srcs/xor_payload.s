@@ -7,6 +7,7 @@ global g_xor_pld_entry_off:data
 global g_xor_pld_jmp_off:data
 global g_xor_pld_sec_vaddr_off:data
 global g_xor_pld_sec_size_off:data
+global g_xor_pld_vaddr_load_off:data
 ; global g_xor_pld_checksum_off:data
 
 
@@ -15,7 +16,7 @@ g_xor_pld_entry_off dd xor_entry - xor_payload
 g_xor_pld_jmp_off dd xor_jmp_off - xor_payload
 g_xor_pld_sec_vaddr_off dd xor_sec_vaddr_off - xor_payload
 g_xor_pld_sec_size_off dd xor_sec_size_off - xor_payload
-
+g_xor_pld_vaddr_load_off dd xor_vaddr_load - xor_payload
 section .text
 
 xor_payload:
@@ -34,20 +35,25 @@ xor_entry:
 
     mov al, 0x9b
     mov rdi, [rel sec_size]
+
+    lea rsi, [rel sec_vaddr]
+xor_vaddr_load:
+
     mov rcx, 0
 
 xor_decrypt_loop_start:
     cmp rcx, rdi
     jge xor_decrypt_loop_end
 
-    mov rsi, [rel sec_vaddr] , leaaaaaaaaaaaaaaaaaaaaaa
-    add rsi, rcx
+    ; mov rsi, [rel sec_vaddr]; , leaaaaaaaaaaaaaaaaaaaaaa
+    ; add rsi, rcx
 
     mov dl, byte [rsi]
     xor dl, al
     mov byte [rsi], dl
 
     inc rcx
+    inc rsi
     jmp xor_decrypt_loop_start
 xor_decrypt_loop_end:
 
@@ -64,8 +70,8 @@ xor_decrypt_loop_end:
     pop rsi
     pop rdi
     pop rax
-    mov rsp, rbp
-    pop rbp
+    ; mov rsp, rbp
+    ; pop rbp
     ; popf
 
     jmp 0xffffffff

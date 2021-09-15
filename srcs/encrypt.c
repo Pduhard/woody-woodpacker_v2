@@ -57,12 +57,12 @@ int xor_encryption(t_file *file)
         datas++;
     }
     file->payload = (char *)xor_payload;
-
     file->pld_len = g_xor_pld_len;
     file->pld_entry_off = g_xor_pld_entry_off;
     file->pld_jmp_off = g_xor_pld_jmp_off;
     file->pld_sec_vaddr_off = g_xor_pld_sec_vaddr_off;
     file->pld_sec_size_off = g_xor_pld_sec_size_off;
+    file->pld_vaddr_load_off = g_xor_pld_vaddr_load_off;
     // if (file->encryption_key)
     //     file->checksum = blowfish_encrypt(*((uint64_t *)file->encryption_key), p, s);
     

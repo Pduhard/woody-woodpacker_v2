@@ -52,6 +52,7 @@ extern unsigned int g_xor_pld_entry_off;
 extern unsigned int g_xor_pld_jmp_off;
 extern unsigned int g_xor_pld_sec_vaddr_off;
 extern unsigned int g_xor_pld_sec_size_off;
+extern unsigned int g_xor_pld_vaddr_load_off;
 
 typedef struct      s_file
 {
@@ -86,6 +87,7 @@ typedef struct      s_file
     uint32_t        pld_sec_size_off;
 
     uint32_t        pld_checksum_off;
+    uint32_t        pld_vaddr_load_off;
 }                   t_file;
 
 

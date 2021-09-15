@@ -8,7 +8,7 @@ int     setup_payload(t_file *file)
     char        *payload_memaddr;
     // char        passwd_buf[64];
     Elf64_Off   old_entry_point_offset;
-
+    int         load_off;
     phdr_infect = find_unused_pt_load_space(file, file->pld_len);
     // printf("Choose a password: ");
     // scanf("%64s", passwd_buf);
@@ -68,6 +68,13 @@ int     setup_payload(t_file *file)
     memcpy(payload_memaddr + file->pld_sec_vaddr_off, (char *)(&encryption_start), 8); // negative rip value for x86-64 jmp is 32bit 
     memcpy(payload_memaddr + file->pld_sec_size_off, (char *)(&file->to_encrypt_shdr->sh_size), 8); // negative rip value for x86-64 jmp is 32bit 
     fprintf(stderr, "sec_vaddr %lx sec_size %lx\n", encryption_start, file->to_encrypt_shdr->sh_size);
+    
+    load_off = (int)(encryption_start - (file->ehdr->e_entry + file->pld_vaddr_load_off));
+
+    fprintf(stderr, "load_off: %x (pld vaddr load off: %x)\n", load_off, file->pld_vaddr_load_off);
+    
+    memcpy(payload_memaddr + file->pld_vaddr_load_off - 4, (char *)&load_off, 4); // negative rip value for x86-64 jmp is 32bit 
+    
     return 1;
 }
 
