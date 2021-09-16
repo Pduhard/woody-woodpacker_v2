@@ -14,6 +14,8 @@
 # include <math.h>
 # include "blowfish.h"
 
+#include <errno.h>
+
 # define USAGE "./woody_woodpacker <file_to_pack>"
 
 
@@ -35,13 +37,16 @@ typedef Elf64_Shdr elf_shdr;
 */
 
 // extern unsigned int g_payload_offset;
-extern unsigned int g_payload_len;
-extern unsigned int g_payload_jmp_offset;
-extern unsigned int g_payload_start_offset;
-extern unsigned int g_payload_checksum_offset;
-extern unsigned int g_payload_encrypted_sec_start_offset;
-extern unsigned int g_payload_encrypted_sec_end_off_offset;
-extern int bbp_call_rip;
+
+extern unsigned int g_blowfish_pld_len;
+extern unsigned int g_blowfish_pld_entry_off;
+extern unsigned int g_blowfish_pld_jmp_off;
+extern unsigned int g_blowfish_pld_sec_vaddr_off;
+extern unsigned int g_blowfish_pld_sec_size_off;
+extern unsigned int g_blowfish_pld_vaddr_load_off;
+extern unsigned int g_blowfish_pld_checksum_off;
+
+// extern int bbp_call_rip;
 
 /*
 ** xor payload vars
@@ -119,7 +124,7 @@ int blowfish_encryption(t_file *file);
 int xor_encryption(t_file *file);
 
 
-void    payload();
+void    blowfish_payload();
 void    xor_payload();
 
 int     power(long long x, unsigned int y, int p);

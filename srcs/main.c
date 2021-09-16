@@ -99,10 +99,12 @@ int		print_woody(t_file *file)
 		fprintf(stderr, "can't open file woody for writing\n");
 		exit(EXIT_FAILURE);
 	}
-
+	fprintf(stderr, "file->ehdr %p %lx\n", file->ehdr, file->size);
+	
 	// fprintf(stderr, "hello %d, %p, %zu\n", fd, (char *)file->ehdr, sizeof(elf_ehdr));
 	if (write(fd, (char *)file->ehdr, file->size) == -1)
-		printf("ah\n"), exit(EXIT_FAILURE);
+      	printf("Error: %s\n", strerror(errno));
+		// printf("ah 3\n"), exit(EXIT_FAILURE);
 
 	
 	// care padding !!
@@ -130,7 +132,7 @@ int		print_woody(t_file *file)
 		0		
 	};
 	if (write(fd, (char *)(&test), sizeof(Elf64_Shdr)) == -1)
-		printf("ah\n"), exit(EXIT_FAILURE);
+		printf("ah 4\n"), exit(EXIT_FAILURE);
 	
 	return 1;
 }

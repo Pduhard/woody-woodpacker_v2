@@ -8,7 +8,7 @@
 ; extern printf
 ; extern scanf
 
-global payload:function
+global blowfish_payload:function
 global power:function
 global get_floating_part:function
 ; global get_floating_part:function
@@ -19,24 +19,26 @@ global feisel:function
 global blowfish_decrypt:function
 global blowfish_encrypt:function
 global blowfish_init:function
-global g_payload_len:data
-global g_payload_jmp_offset:data
-global g_payload_start_offset:data
-global g_payload_checksum_offset:data
-global g_payload_encrypted_sec_start_offset:data
-global g_payload_encrypted_sec_end_off_offset:data
-global bbp_call_rip:data
+global g_blowfish_pld_len:data
+global g_blowfish_pld_entry_off:data
+global g_blowfish_pld_jmp_off:data
+global g_blowfish_pld_checksum_off:data
+global g_blowfish_pld_sec_vaddr_off:data
+global g_blowfish_pld_sec_size_off:data
+global g_blowfish_pld_vaddr_load_off:data
+; global bbp_call_rip:data
 
-g_payload_len dd end - payload
-g_payload_jmp_offset dd jmp_offset - payload
-g_payload_start_offset dd woody_w - payload
-g_payload_checksum_offset dd checksum_offset - payload
-g_payload_encrypted_sec_start_offset dd encrypted_sec_start_offset - payload
-g_payload_encrypted_sec_end_off_offset dd encrypted_sec_end_off_offset - payload
+g_blowfish_pld_len dd blowfish_end - blowfish_payload
+g_blowfish_pld_entry_off dd blowfish_entry - blowfish_payload
+g_blowfish_pld_jmp_off dd blowfish_jmp - blowfish_payload
+g_blowfish_pld_checksum_off dd blowfish_checksum - blowfish_payload
+g_blowfish_pld_sec_vaddr_off dd blowfish_sec_vaddr - blowfish_payload
+g_blowfish_pld_sec_size_off dd blowfish_sec_size - blowfish_payload
+g_blowfish_pld_vaddr_load_off dd blowfish_vaddr_load - blowfish_payload
 
 section .text
 
-payload:
+blowfish_payload:
 
 _strlen:
 
@@ -765,7 +767,7 @@ bbp_s_cross_loop_end:
   pop rbp
   ret
 
-woody_w:
+blowfish_entry:
   push rbp
   mov rbp, rsp
   push rax
@@ -778,31 +780,32 @@ woody_w:
   ; jmp woody_decrypt_loop_end
 
   cmp dword [rel checksum], 0
-  je woody_no_key
+  je blowfish_no_key
 
   mov rdi, 1
   lea rsi, [rel key_ask]
   mov rdx, len_key_ask
-  mov rax, 0x01
+  mov rax, 0x01 ; write
   syscall
 
   mov rdi, 0
   mov rsi, rsp
   mov rdx, 64
-  mov rax, 0x0
+  mov rax, 0x0 ; read
   syscall
 
   add rax, rsp
-  sub rax, 1
+  sub rax, 1 ; '\n' replace by '\0'
   mov byte [rax], 0
-  
+
   mov rdi, rsp
   mov rsi, rsp
   add rsi, 64
   mov rdx, rsp
   add rdx, 136
 
-  call -641 ; //blowfish init
+woody_call_blowfish_init:
+  call blowfish_init_rip ; //blowfish init
 
   mov rdi, qword [rsp]
   mov rsi, rsp
@@ -810,8 +813,8 @@ woody_w:
   mov rdx, rsp
   add rdx, 136
 
-bbp_getnth_term_offset:
-  call -854 ; //blowfish_encrypt
+woody_call_blowfish_encrypt:
+  call blowfish_encrypt_rip ; //blowfish_encrypt
 
   ; mov rdi, 0x93c7659fb496b86c
   cmp rax, qword [rel checksum]
@@ -832,53 +835,56 @@ nok_start:
   syscall
 
   mov rdi, 1
-  mov rax, 60
+  mov rax, 60 ; exit(EXIT_FAILURE)
   syscall
 
 nok_end:
 
   jmp woody_decrypt
 
-woody_no_key:
+blowfish_no_key:
 
 
-  mov rdi, rsp
+  mov rdi, 0x0
   mov rsi, rsp
   add rsi, 64
   mov rdx, rsp
   add rdx, 136
 
-  call -765 ; //blowfish init
+woody_call_blowfish_init_no_key:
+  call blowfish_init_no_key_rip ; //blowfish init
 
 woody_decrypt:
 
   mov qword [rsp + 4240], 0
-  mov rax, [rel encrypted_sec_start]
+  lea rax, [rel sec_vaddr]
+blowfish_vaddr_load:
   mov qword [rsp + 4248], rax
 
-; woody_decrypt_loop:
-;   mov rax, [rel encrypted_sec_end_off]
-;   cmp qword [rsp + 4240], rax
-;   jge woody_decrypt_loop_end
+woody_decrypt_loop:
+  mov rax, [rel sec_size]
+  cmp qword [rsp + 4240], rax
+  jge woody_decrypt_loop_end
 
-;   mov rax, qword [rsp + 4248]
-;   mov rdi, qword [rax]
+  mov rax, qword [rsp + 4248]
+  mov rdi, qword [rax]
 
-;   mov rsi, rsp
-;   add rsi, 64
+  mov rsi, rsp
+  add rsi, 64
 
-;   mov rdx, rsp
-;   add rdx, 136
+  mov rdx, rsp
+  add rdx, 136
 
-;   call -1212 ; blowfish_decrypt
+woody_call_blowfish_decrypt:
+  call blowfish_decrypt_rip
 
-;   mov rdi, qword [rsp + 4248]
-;   mov qword [rdi], rax
+  mov rdi, qword [rsp + 4248]
+  mov qword [rdi], rax
   
-;   add qword [rsp + 4240], 8
-;   add qword [rsp + 4248], 8
-;   jmp woody_decrypt_loop
-; woody_decrypt_loop_end:
+  add qword [rsp + 4240], 8
+  add qword [rsp + 4248], 8
+  jmp woody_decrypt_loop
+woody_decrypt_loop_end:
 
   ; mov rdi, rax
   ; mov rax, 60
@@ -925,7 +931,7 @@ woody_decrypt:
   pop rbp
   jmp 0xffffffff
 
-jmp_offset:
+blowfish_jmp:
   _0001 dq 0.0001
   _0 dq 0.0
   _1 dq 1.0
@@ -938,11 +944,11 @@ jmp_offset:
   woody db "....WOODY.....", 10, 0
   len equ $ - woody
   _pi_cap dq 128
-encrypted_sec_start_offset:
-  encrypted_sec_start dq 0
-encrypted_sec_end_off_offset:
-  encrypted_sec_end_off dq 0
-checksum_offset:
+blowfish_sec_vaddr:
+  sec_vaddr dq 0
+blowfish_sec_size:
+  sec_size dq 0
+blowfish_checksum:
   checksum dq 0
   key_ask db "password: ", 0
   len_key_ask equ $ - key_ask
@@ -950,6 +956,10 @@ checksum_offset:
   len_ok equ $ - ok
   nok db "Wrong password", 10, 0
   len_nok equ $ - nok
-  bbp_call_rip dd blowfish_encrypt - bbp_getnth_term_offset - 1
-end:
+  blowfish_decrypt_rip equ blowfish_decrypt - woody_call_blowfish_decrypt - 1
+  blowfish_encrypt_rip equ blowfish_encrypt - woody_call_blowfish_encrypt - 1
+  blowfish_init_rip equ blowfish_init - woody_call_blowfish_init - 1
+  blowfish_init_no_key_rip equ blowfish_init - woody_call_blowfish_init_no_key - 1
+  ; bbp_call_rip dd blowfish_encrypt - bbp_getnth_term_offset - 1
+blowfish_end:
 

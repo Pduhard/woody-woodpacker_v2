@@ -69,10 +69,11 @@ int     setup_payload(t_file *file)
     memcpy(payload_memaddr + file->pld_sec_size_off, (char *)(&file->to_encrypt_shdr->sh_size), 8); // negative rip value for x86-64 jmp is 32bit 
     fprintf(stderr, "sec_vaddr %lx sec_size %lx\n", encryption_start, file->to_encrypt_shdr->sh_size);
     
-    load_off = (int)(encryption_start - (file->ehdr->e_entry + file->pld_vaddr_load_off));
-
-    fprintf(stderr, "load_off: %x (pld vaddr load off: %x)\n", load_off, file->pld_vaddr_load_off);
+    load_off = (int)(encryption_start - (file->payload_vaddr + file->pld_vaddr_load_off));
+    fprintf(stderr, "load_off: %d (pld vaddr load off: %x)\n", load_off, file->pld_vaddr_load_off);
     
+    fprintf(stderr, "%lx == %lx ? \n", encryption_start, file->payload_vaddr + file->pld_vaddr_load_off + load_off);
+
     memcpy(payload_memaddr + file->pld_vaddr_load_off - 4, (char *)&load_off, 4); // negative rip value for x86-64 jmp is 32bit 
     
     return 1;
