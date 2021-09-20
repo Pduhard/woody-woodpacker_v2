@@ -21,6 +21,10 @@
 
 # define SUCCESS 0
 # define ERROR 1
+
+# define TRUE 0
+# define FALSE 1
+
 # define SECTION_TO_ENCRYPT    ".text"
 
 #define DEFAULT_ENCRYPTION_ALGORITHM    "xor"
@@ -93,6 +97,8 @@ typedef struct      s_file
 
     uint32_t        pld_checksum_off;
     uint32_t        pld_vaddr_load_off;
+
+    int             cave_found;
 }                   t_file;
 
 
@@ -115,6 +121,9 @@ int     setup_payload(t_file *file);
 
 int     update_ehdr(t_file *file);
 int     update_phdr(t_file *file);
+
+int     update_shdr(t_file *file);
+
 
 void    print_64ehdr(t_file *file);
 void    print_64phdr(t_file *file);

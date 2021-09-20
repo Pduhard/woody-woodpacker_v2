@@ -17,7 +17,7 @@ NAME		=	woody_woodpacker
 
 CC			=	gcc
 NASM		= 	nasm
-CFLAGS		=	-no-pie -Wall -Werror -Wextra -lm
+CFLAGS		=	-no-pie -Wall -Werror -Wextra -lm -std=gnu11
 SFLAGS		=	-f elf64
 INC_DIR		=	./includes/
 INCLUDES	=	woody_woodpacker.h

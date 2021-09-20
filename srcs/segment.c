@@ -54,6 +54,7 @@ elf_phdr    *find_unused_pt_load_space(t_file *file, Elf64_Off size)
     int         n = 0;
 
     target = NULL;
+    file->cave_found = TRUE;
     phdr = file->phdr;
     for (Elf64_Half i = 0; i < file->ehdr->e_phnum - 1; i++)
     {
@@ -67,8 +68,10 @@ elf_phdr    *find_unused_pt_load_space(t_file *file, Elf64_Off size)
             
             fprintf(stderr, "available size: %lx, payload size: %lx\n", next->p_offset - end_offset_aligned, size);
 
-            if (next->p_offset - end_offset_aligned >= size && (!target || n == 8))
+            if (next->p_offset - end_offset_aligned >= size && !target)
             {
+                if (next->p_offset < end_offset_aligned)
+                    file->cave_found = FALSE;
                 fprintf(stderr, "THIS ONE!\n");
                 target = phdr;
                 n++;

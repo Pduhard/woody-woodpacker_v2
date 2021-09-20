@@ -5,11 +5,14 @@ int     setup_payload(t_file *file)
     elf_phdr    *phdr_infect;
     // elf_shdr    *shdr_encrypt;
     Elf64_Off   jmp_offset;
-    char        *payload_memaddr;
+    // char        *file->payload;
     // char        passwd_buf[64];
     Elf64_Off   old_entry_point_offset;
     int         load_off;
     phdr_infect = find_unused_pt_load_space(file, file->pld_len);
+
+    if (file->cave_found == FALSE)
+        update_shdr(file);
     // printf("Choose a password: ");
     // scanf("%64s", passwd_buf);
 
@@ -32,7 +35,7 @@ int     setup_payload(t_file *file)
     file->ehdr->e_entry = file->payload_vaddr + file->pld_entry_off;
 
     fprintf(stderr, "old entry %lx nex entry %lx payload off %lx\n", file->old_entry_point, file->ehdr->e_entry, file->payload_offset);
-    payload_memaddr = file->mapped_file + file->payload_offset;
+    // payload_memaddr = file->mapped_file + file->payload_offset;
     // payload_memaddr = file->bytecode + (file->payload_offset - sizeof(Elf64_Ehdr) - (file->ehdr->e_phentsize * file->ehdr->e_phnum));
     jmp_offset = file->payload_vaddr + file->pld_jmp_off;
     old_entry_point_offset = file->old_entry_point - jmp_offset;
@@ -46,27 +49,27 @@ int     setup_payload(t_file *file)
     // save .text section start - end at encrypted_sec_start - encrypted_sec_end
     // save key encrypted at asm checksum to verify key and file sanity after decrypt
 
-    fprintf(stderr, "%p %p %lx", payload_memaddr, file->payload, file->payload_filesz);
-    memcpy(payload_memaddr, file->payload, file->payload_filesz);
+    // fprintf(stderr, "%p %p %lx", payload_memaddr, file->payload, file->payload_filesz);
+    // memcpy(payload_memaddr, file->payload, file->payload_filesz);
     
     fprintf(stderr, "section to encrypt:\toffset: %lx, size: %lx\n",
         file->to_encrypt_shdr->sh_offset,
         file->to_encrypt_shdr->sh_size);
     
-    memcpy(payload_memaddr + file->pld_jmp_off - 4, (char *)&old_entry_point_offset, 4); // negative rip value for x86-64 jmp is 32bit 
+    memcpy(file->payload + file->pld_jmp_off - 4, (char *)&old_entry_point_offset, 4); // negative rip value for x86-64 jmp is 32bit 
     
     fprintf(stderr, "section to encrypt:\toffset: %lx, size: %lx\n",
         file->to_encrypt_shdr->sh_offset,
         file->to_encrypt_shdr->sh_size);
     if (file->encryption_key)
-        memcpy(payload_memaddr + file->pld_checksum_off, (char *)(&file->checksum), 8); // negative rip value for x86-64 jmp is 32bit 
+        memcpy(file->payload + file->pld_checksum_off, (char *)(&file->checksum), 8); // negative rip value for x86-64 jmp is 32bit 
     
     fprintf(stderr, "lol: %lx %lx\n, ", file->to_encrypt_shdr->sh_addr, file->to_encrypt_shdr->sh_size);
     Elf64_Addr  encryption_start;
 
     encryption_start = file->to_encrypt_shdr->sh_addr;
-    memcpy(payload_memaddr + file->pld_sec_vaddr_off, (char *)(&encryption_start), 8); // negative rip value for x86-64 jmp is 32bit 
-    memcpy(payload_memaddr + file->pld_sec_size_off, (char *)(&file->to_encrypt_shdr->sh_size), 8); // negative rip value for x86-64 jmp is 32bit 
+    memcpy(file->payload + file->pld_sec_vaddr_off, (char *)(&encryption_start), 8); // negative rip value for x86-64 jmp is 32bit 
+    memcpy(file->payload + file->pld_sec_size_off, (char *)(&file->to_encrypt_shdr->sh_size), 8); // negative rip value for x86-64 jmp is 32bit 
     fprintf(stderr, "sec_vaddr %lx sec_size %lx\n", encryption_start, file->to_encrypt_shdr->sh_size);
     
     load_off = (int)(encryption_start - (file->payload_vaddr + file->pld_vaddr_load_off));
@@ -74,7 +77,7 @@ int     setup_payload(t_file *file)
     
     fprintf(stderr, "%lx == %lx ? \n", encryption_start, file->payload_vaddr + file->pld_vaddr_load_off + load_off);
 
-    memcpy(payload_memaddr + file->pld_vaddr_load_off - 4, (char *)&load_off, 4); // negative rip value for x86-64 jmp is 32bit 
+    memcpy(file->payload + file->pld_vaddr_load_off - 4, (char *)&load_off, 4); // negative rip value for x86-64 jmp is 32bit 
     
     return 1;
 }

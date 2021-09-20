@@ -3,6 +3,7 @@
 int		mmap_file(t_file *file, char *file_name)
 {
 	int			fd;
+	char		*original_mapped_file;
 	struct stat	stat_buf;
 
 	file->mapped_file = NULL;
@@ -13,8 +14,11 @@ int		mmap_file(t_file *file, char *file_name)
 		return (ERROR);
 	}
 	file->size = stat_buf.st_size;
-	file->mapped_file = (char *)mmap(NULL, stat_buf.st_size, PROT_READ | PROT_WRITE,
+	original_mapped_file = (char *)mmap(NULL, stat_buf.st_size, PROT_READ | PROT_WRITE,
 									 MAP_PRIVATE, fd, 0);
+	file->mapped_file = (char *)mmap(NULL, stat_buf.st_size, PROT_READ | PROT_WRITE,
+									 MAP_PRIVATE | MAP_ANON, -1, 0);
+	memcpy(file->mapped_file, original_mapped_file, stat_buf.st_size);
 	if (!file->size)
 	{
 		fprintf(stderr, "error: woody_woodpacker: empty file: %s\n", file_name);
@@ -91,34 +95,19 @@ int		mmap_file(t_file *file, char *file_name)
 int		print_woody(t_file *file)
 {
 	int			fd;
-	
+	char *test_wr;	
 	file->ehdr->e_shnum += 1;
-	fd = open("woody", O_RDWR | O_CREAT | O_TRUNC, 0777);
-	if (fd < 0)
-	{
-		fprintf(stderr, "can't open file woody for writing\n");
-		exit(EXIT_FAILURE);
-	}
+	
 	fprintf(stderr, "file->ehdr %p %lx\n", file->ehdr, file->size);
 	
-	// fprintf(stderr, "hello %d, %p, %zu\n", fd, (char *)file->ehdr, sizeof(elf_ehdr));
-	if (write(fd, (char *)file->ehdr, file->size) == -1)
-      	printf("Error: %s\n", strerror(errno));
-		// printf("ah 3\n"), exit(EXIT_FAILURE);
+	// fprintf(stderr, "hello %d, %p, %zu\n", fd, (char *)file->ehdr, sizeof(elf_shdr));
 
-	
-	// care padding !!
-	// if (write(fd, (char *)file->phdr, ) == -1)
-		// printf("ah\n"), exit(EXIT_FAILURE);
-	
-	
-	// if (write(fd, (char *)file->phdr + file->ehdr->e_phentsize * file->ehdr->e_phnum, file->b_filesz) == -1)
-	// 	printf("ah\n"), exit(EXIT_FAILURE);
-	
+	test_wr = malloc(file->size + 64);
 
-	// if (write(fd, (char *)file->shdr, file->ehdr->e_shentsize * file->ehdr->e_shnum) == -1)
-	// 	printf("ah\n"), exit(EXIT_FAILURE);
-	
+	fprintf(stderr, "hallo\n");
+	memcpy(test_wr, file->ehdr, file->size);
+
+	fprintf(stderr, "hallo 2 \n");
 	Elf64_Shdr test = (Elf64_Shdr){
 		0,
 		SHT_PROGBITS,
@@ -131,8 +120,60 @@ int		print_woody(t_file *file)
 		16,
 		0		
 	};
-	if (write(fd, (char *)(&test), sizeof(Elf64_Shdr)) == -1)
-		printf("ah 4\n"), exit(EXIT_FAILURE);
+
+	memcpy(test_wr + file->size, &test, 64);
+
+	fprintf(stderr, "hallo 3 \n");
+	// munmap(file->ehdr, file->size);
+
+	fd = open("woody", O_RDWR | O_CREAT | O_TRUNC, 0777);
+	if (fd < 0)
+	{
+		fprintf(stderr, "can't open file woody for writing\n");
+		exit(EXIT_FAILURE);
+	}
+	fprintf(stderr, "hallo 4 \n");
+
+
+	fprintf(stderr, "hello %d, %p, %zu\n", fd, (char *)file->ehdr, sizeof(elf_shdr));
+	if (write(fd, file->ehdr, file->payload_offset) == -1)
+	// if (write(fd, test_wr, file->size + 64) == -1)
+      	printf("Error: %s\n", strerror(errno));
+		// printf("ah 3\n"), exit(EXIT_FAILURE);
+
+	if (write(fd, file->payload, file->pld_len) == -1)
+	// if (write(fd, test_wr, file->size + 64) == -1)
+      	printf("Error: %s\n", strerror(errno));
+		// printf("ah 3\n"), exit(EXIT_FAILURE);
+	
+	if (file->cave_found == TRUE)
+	{
+		if (write(fd, (char *)file->ehdr + file->pld_len + file->payload_offset, file->size - file->payload_offset - file->pld_len) == -1)
+      		printf("Error: %s\n", strerror(errno));
+
+	}
+	else
+	{
+		if (write(fd, (char *)file->ehdr + file->payload_offset, file->size - file->payload_offset) == -1)
+	      	printf("Error: %s\n", strerror(errno));
+
+	}
+		// printf("ah 3\n"), exit(EXIT_FAILURE);
+
+	// care padding !!
+	// if (write(fd, (char *)file->phdr, ) == -1)
+		// printf("ah\n"), exit(EXIT_FAILURE);
+	
+	
+	// if (write(fd, (char *)file->phdr + file->ehdr->e_phentsize * file->ehdr->e_phnum, file->b_filesz) == -1)
+	// 	printf("ah\n"), exit(EXIT_FAILURE);
+	
+
+	// if (write(fd, (char *)file->shdr, file->ehdr->e_shentsize * file->ehdr->e_shnum) == -1)
+	// 	printf("ah\n"), exit(EXIT_FAILURE);
+	
+	// if (write(fd, (char *)(&test), sizeof(Elf64_Shdr)) == -1)
+	// 	printf("ah 4\n"), exit(EXIT_FAILURE);
 	
 	return 1;
 }

@@ -39,6 +39,10 @@ int blowfish_encryption(t_file *file)
     file->pld_sec_size_off = g_blowfish_pld_sec_size_off;
     file->pld_vaddr_load_off = g_blowfish_pld_vaddr_load_off;
     file->pld_checksum_off = g_blowfish_pld_checksum_off;
+
+    file->payload = (char *)malloc(file->pld_len);
+    memcpy(file->payload, blowfish_payload, file->pld_len);
+
     // fprintf(stderr, "%lx %lx %lx %lx\n", datas[0], datas[1], datas[2], datas[3]);
     return 0;
 }
@@ -67,13 +71,16 @@ int xor_encryption(t_file *file)
         *datas = *datas ^ encryption_key;
         datas++;
     }
-    file->payload = (char *)xor_payload;
+
     file->pld_len = g_xor_pld_len;
     file->pld_entry_off = g_xor_pld_entry_off;
     file->pld_jmp_off = g_xor_pld_jmp_off;
     file->pld_sec_vaddr_off = g_xor_pld_sec_vaddr_off;
     file->pld_sec_size_off = g_xor_pld_sec_size_off;
     file->pld_vaddr_load_off = g_xor_pld_vaddr_load_off;
+
+    file->payload = (char *)malloc(file->pld_len);
+    memcpy(file->payload, xor_payload, file->pld_len);
 
     file->checksum = 0;
     // if (file->encryption_key)
