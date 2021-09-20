@@ -930,8 +930,17 @@ woody_decrypt_loop_end:
   mov rsp, rbp
   pop rbp
   jmp 0xffffffff
-
 blowfish_jmp:
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+  nop
+
   _0001 dq 0.0001
   _0 dq 0.0
   _1 dq 1.0

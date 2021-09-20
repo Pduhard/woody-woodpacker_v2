@@ -95,17 +95,17 @@ int		mmap_file(t_file *file, char *file_name)
 int		print_woody(t_file *file)
 {
 	int			fd;
-	char *test_wr;	
+	// char *test_wr;	
 	file->ehdr->e_shnum += 1;
 	
 	fprintf(stderr, "file->ehdr %p %lx\n", file->ehdr, file->size);
 	
 	// fprintf(stderr, "hello %d, %p, %zu\n", fd, (char *)file->ehdr, sizeof(elf_shdr));
 
-	test_wr = malloc(file->size + 64);
+	// test_wr = malloc(file->size + 64);
 
 	fprintf(stderr, "hallo\n");
-	memcpy(test_wr, file->ehdr, file->size);
+	// memcpy(test_wr, file->ehdr, file->size);
 
 	fprintf(stderr, "hallo 2 \n");
 	Elf64_Shdr test = (Elf64_Shdr){
@@ -121,11 +121,14 @@ int		print_woody(t_file *file)
 		0		
 	};
 
-	memcpy(test_wr + file->size, &test, 64);
+	// memcpy(test_wr + file->size, &test, 64);
 
-	fprintf(stderr, "hallo 3 \n");
+	// fprintf(stderr, "hallo 3 \n");
 	// munmap(file->ehdr, file->size);
 
+	if (file->cave_found == FALSE)
+		file->ehdr->e_shoff += file->payload_filesz;
+	fprintf(stderr, "new sh off %lx \n", file->ehdr->e_shoff);
 	fd = open("woody", O_RDWR | O_CREAT | O_TRUNC, 0777);
 	if (fd < 0)
 	{
@@ -136,24 +139,29 @@ int		print_woody(t_file *file)
 
 
 	fprintf(stderr, "hello %d, %p, %zu\n", fd, (char *)file->ehdr, sizeof(elf_shdr));
-	if (write(fd, file->ehdr, file->payload_offset) == -1)
+	if (file->payload_offset > file->size)
+		printf("heyy\n");
+	else
+		printf("ogggg %lx %lx\n", file->payload_offset, file->size);
+	if (write(fd, file->ehdr, file->payload_offset > file->size ? file->size : file->payload_offset) == -1)
 	// if (write(fd, test_wr, file->size + 64) == -1)
       	printf("Error: %s\n", strerror(errno));
 		// printf("ah 3\n"), exit(EXIT_FAILURE);
 
-	if (write(fd, file->payload, file->pld_len) == -1)
+	if (write(fd, file->payload, file->payload_filesz) == -1)
 	// if (write(fd, test_wr, file->size + 64) == -1)
       	printf("Error: %s\n", strerror(errno));
 		// printf("ah 3\n"), exit(EXIT_FAILURE);
 	
 	if (file->cave_found == TRUE)
 	{
-		if (write(fd, (char *)file->ehdr + file->pld_len + file->payload_offset, file->size - file->payload_offset - file->pld_len) == -1)
+		if (write(fd, (char *)file->ehdr + file->payload_filesz + file->payload_offset, file->size - file->payload_offset - file->payload_filesz) == -1)
       		printf("Error: %s\n", strerror(errno));
 
 	}
 	else
 	{
+		
 		if (write(fd, (char *)file->ehdr + file->payload_offset, file->size - file->payload_offset) == -1)
 	      	printf("Error: %s\n", strerror(errno));
 
@@ -172,8 +180,8 @@ int		print_woody(t_file *file)
 	// if (write(fd, (char *)file->shdr, file->ehdr->e_shentsize * file->ehdr->e_shnum) == -1)
 	// 	printf("ah\n"), exit(EXIT_FAILURE);
 	
-	// if (write(fd, (char *)(&test), sizeof(Elf64_Shdr)) == -1)
-	// 	printf("ah 4\n"), exit(EXIT_FAILURE);
+	if (write(fd, (char *)(&test), sizeof(Elf64_Shdr)) == -1)
+		printf("ah 4\n"), exit(EXIT_FAILURE);
 	
 	return 1;
 }
@@ -252,14 +260,15 @@ int 	main(int argc, char **argv)
 	if (!(file_name = parse_options(&file, argv)))
 	{
 		fprintf(stderr, USAGE);
-		exit(EXIT_FAILURE);
+		fprintf(stderr, "exit(1)\n"),exit(EXIT_FAILURE);
 	}
 	if (mmap_file(&file, argv[1]) == ERROR)
-		exit(EXIT_FAILURE);
+		fprintf(stderr, "exit(2)\n"),exit(EXIT_FAILURE);
 	if (parse_elf(&file) == ERROR)
-		exit(EXIT_FAILURE);
+		fprintf(stderr, "exit(3)\n"),exit(EXIT_FAILURE);
+	fprintf(stderr, "encrypt ok\n");
 	if (file.encrypt(&file) == ERROR)
-		exit(EXIT_FAILURE);
+		fprintf(stderr, "exit(4)\n"),exit(EXIT_FAILURE);
 	if (!setup_payload(&file))
 	{
 		fprintf(stderr, "Doesn't work need to insert end update offsets\n");

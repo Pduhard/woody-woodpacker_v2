@@ -9,11 +9,12 @@ int     setup_payload(t_file *file)
     // char        passwd_buf[64];
     Elf64_Off   old_entry_point_offset;
     int         load_off;
-    phdr_infect = find_unused_pt_load_space(file, file->pld_len);
 
-    if (file->cave_found == FALSE)
-        update_shdr(file);
-    // printf("Choose a password: ");
+    // file->payload_filesz = ALIGN16(file->pld_len);
+    file->payload_filesz = file->pld_len;
+    phdr_infect = find_unused_pt_load_space(file, file->payload_filesz);
+
+    printf("Choose a password: ");
     // scanf("%64s", passwd_buf);
 
     
@@ -24,12 +25,11 @@ int     setup_payload(t_file *file)
     // shdr_encrypt = find_section_to_encrypt(file);
     // fprintf(stderr, "sh_type: %x sh_flags: %lx sh_addr: %lx sh_offset: %lx sh_size: %lx sh_addralign: %lx sh_entsize: %lx\n", shdr_encrypt->sh_type, shdr_encrypt->sh_flags, shdr_encrypt->sh_addr, shdr_encrypt->sh_offset, shdr_encrypt->sh_size, shdr_encrypt->sh_addralign, shdr_encrypt->sh_entsize);
 
-    file->payload_filesz = file->pld_len;
     file->payload_offset = ALIGN16(phdr_infect->p_offset + phdr_infect->p_filesz);
     file->payload_vaddr = ALIGN16(phdr_infect->p_vaddr + phdr_infect->p_memsz);
     
-    phdr_infect->p_filesz = ALIGN16(phdr_infect->p_filesz) + file->pld_len;
-    phdr_infect->p_memsz = ALIGN16(phdr_infect->p_memsz) + file->pld_len;
+    phdr_infect->p_filesz = ALIGN16(phdr_infect->p_filesz) + file->payload_filesz;
+    phdr_infect->p_memsz = ALIGN16(phdr_infect->p_memsz) + file->payload_filesz;
 
     file->old_entry_point = file->ehdr->e_entry;
     file->ehdr->e_entry = file->payload_vaddr + file->pld_entry_off;
@@ -79,6 +79,11 @@ int     setup_payload(t_file *file)
 
     memcpy(file->payload + file->pld_vaddr_load_off - 4, (char *)&load_off, 4); // negative rip value for x86-64 jmp is 32bit 
     
+    
+    if (file->cave_found == FALSE)
+        update_shdr(file),
+        print_64shdr(file);
+
     return 1;
 }
 

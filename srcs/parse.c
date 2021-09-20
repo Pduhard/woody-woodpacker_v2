@@ -10,6 +10,7 @@ elf_shdr    *find_section_to_encrypt(t_file *file)
     curr = file->shdr;
     for (Elf32_Half i = 0; i < file->ehdr->e_shnum; i++)
     {
+        fprintf(stderr, "%s\n", file->strtab + curr->sh_name);
         if (strcmp(file->strtab + curr->sh_name, SECTION_TO_ENCRYPT) == 0)
             return curr;
         curr += 1;
@@ -30,6 +31,7 @@ int     parse_elf(t_file *file)
         fprintf(stderr, "Wrong magic numbers, not an ELF file\n");
         return ERROR;
     }
+    fprintf(stderr, "elf ok\n");
 
     // File class byte
     if (e_ident[EI_CLASS] == ELFCLASS64)
@@ -37,8 +39,12 @@ int     parse_elf(t_file *file)
         file->ehdr = (Elf64_Ehdr *)file->mapped_file;
         file->phdr = (Elf64_Phdr *)(file->mapped_file + file->ehdr->e_phoff);
         file->shdr = (Elf64_Shdr *)(file->mapped_file + file->ehdr->e_shoff);
+        fprintf(stderr, "%lx\n",  (file->shdr + file->ehdr->e_shstrndx)->sh_offset);
         file->strtab = file->mapped_file + (file->shdr + file->ehdr->e_shstrndx)->sh_offset;
+        print_64shdr(file);
+
     }
+
     else if (e_ident[EI_CLASS] == ELFCLASS32)
     {
         fprintf(stderr, "32-bit objects are not supported\n");
@@ -49,9 +55,14 @@ int     parse_elf(t_file *file)
         fprintf(stderr, "Invalid file class byt index: %hhu\n", e_ident[EI_CLASS]);
         return ERROR;
     }
+    fprintf(stderr, "elf ok 2 %p\n", file->strtab);
+    fprintf(stderr, "elf ok 2 %s\n", file->strtab + 1);
+
     parse_bytecode(file);
+    fprintf(stderr, "elf ok 3\n");
     file->to_encrypt_shdr = find_section_to_encrypt(file);
 
+    fprintf(stderr, "elf ok 4\n");
     if (!file->to_encrypt_shdr)
     {
         fprintf(stderr, "Can't find \"%s\" section for encryption\n", SECTION_TO_ENCRYPT);

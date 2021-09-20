@@ -83,7 +83,7 @@ elf_phdr    *find_unused_pt_load_space(t_file *file, Elf64_Off size)
         }
         phdr++;
     }
-    if (!target)
+    if (!target) // should never pass here
     {
         fprintf(stderr, "no suffisant padding size in pt loads => exit\n");
         exit(EXIT_FAILURE);

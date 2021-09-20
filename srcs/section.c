@@ -17,8 +17,12 @@ int     update_shdr(t_file *file)
 
     for (Elf64_Half i = 0; i < file->ehdr->e_shnum; i++)
     {
-        if (shdr->sh_offset >= file->payload_offset)
-            shdr->sh_offset += file->pld_len;
+        fprintf(stderr, "%lx >= %lx ?\n", shdr->sh_offset, file->payload_offset);
+        if (shdr->sh_offset > file->payload_offset)
+        {
+            shdr->sh_offset += file->payload_filesz;
+
+        }
         // fprintf(stderr, "name: %s ", str_table + shdr->sh_name);
         // fprintf(stderr, "name: %c\n", shdr->sh_name);
         // fprintf(stderr, "name: %s\n", file->mapped_file + file->ehdr->e_shstrndx + shdr->sh_name);
