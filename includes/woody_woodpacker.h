@@ -16,25 +16,33 @@
 
 #include <errno.h>
 
-# define USAGE "./woody_woodpacker <file_to_pack>"
+# define C_WARN "\x1b[33;1m"
+# define C_ERR "\x1b[31;1m"
+# define C_SUCC "\x1b[32;1m"
+# define C_RES "\x1b[0m"
 
+// # define V_WARN 0b1
+// # define 
 
-# define SUCCESS 0
-# define ERROR 1
+# define USAGE "./woody_woodpacker <file_to_pack> [ -e <xor | blowfish> ] ] [ -k <enter key> ]\n"
 
 # define TRUE 0
 # define FALSE 1
 
+# define SUCCESS TRUE
+# define ERROR FALSE
+
+
 # define SECTION_TO_ENCRYPT    ".text"
 
-#define DEFAULT_ENCRYPTION_ALGORITHM    "xor"
+# define DEFAULT_ENCRYPTION_ALGORITHM    "blowfish"
 
 # define GET_ALIGN16(x) ((x) % 16 ? 16 - (x) % 16 : 0)
 # define ALIGN16(x) ((x) + GET_ALIGN16((x)))
 
-typedef Elf64_Ehdr elf_ehdr;
-typedef Elf64_Phdr elf_phdr;
-typedef Elf64_Shdr elf_shdr;
+// typedef Elf64_Ehdr Elf64_Ehdr;
+// typedef Elf64_Phdr Elf64_Phdr;
+// typedef Elf64_Shdr Elf64_Shdr;
 
 /*
 ** blowfish payload vars
@@ -67,12 +75,9 @@ typedef struct      s_file
 {
     char            *mapped_file;
     Elf64_Addr      old_entry_point;
-    elf_ehdr        *ehdr;
-    elf_phdr        *phdr;
-    elf_shdr        *shdr;
-    // char            *bytecode;
-    Elf64_Off       b_offset;
-    Elf64_Off       b_filesz;
+    Elf64_Ehdr      *ehdr;
+    Elf64_Phdr      *phdr;
+    Elf64_Shdr      *shdr;
     char            *payload;
     Elf64_Addr      payload_vaddr;
     Elf64_Off       payload_offset;
@@ -99,23 +104,21 @@ typedef struct      s_file
     uint32_t        pld_vaddr_load_off;
 
     int             cave_found;
+    uint32_t        bss_zero_fill;
+    int             verbose;
 }                   t_file;
 
 
 
-int         parse_elf(t_file *file);
-elf_ehdr    *parse_64ehdr(t_file *file);
-elf_phdr    *parse_64phdr(t_file *file);
-elf_shdr    *parse_64shdr(t_file *file);
-int         parse_bytecode(t_file *file);
+int             parse_elf(t_file *file);
 
-elf_phdr    *get_last_pt_load(t_file *file);
+Elf64_Phdr    *get_last_pt_load(t_file *file);
 char    *empty_bytecode_space(t_file *file, Elf64_Off payload_size);
 
-elf_phdr    *find_unused_pt_load_space(t_file *file, Elf64_Off size);
-elf_shdr    *find_section_to_encrypt(t_file *file);
+Elf64_Phdr    *find_unused_pt_load_space(t_file *file, Elf64_Off size);
+Elf64_Shdr    *find_section_to_encrypt(t_file *file);
 
-Elf64_Off   get_phdr_end_offset_aligned(elf_phdr *phdr);
+Elf64_Off   get_phdr_end_offset_aligned(Elf64_Phdr *phdr);
 
 int     setup_payload(t_file *file);
 
@@ -125,9 +128,9 @@ int     update_phdr(t_file *file);
 int     update_shdr(t_file *file);
 
 
-void    print_64ehdr(t_file *file);
-void    print_64phdr(t_file *file);
-void    print_64shdr(t_file *file);
+// void    print_64ehdr(t_file *file);
+// void    print_64phdr(t_file *file);
+// void    print_64shdr(t_file *file);
 
 int blowfish_encryption(t_file *file);
 int xor_encryption(t_file *file);
@@ -143,7 +146,7 @@ double    sigma(int n, int a);
 uint32_t     bbp_getnth_term(int n);
 
 
-void    blowfish_run(char *key);
+// void    blowfish_run(char *key);
 void    blowfish_init(char *key, uint32_t p[18], uint32_t s[4][256]);
 
 

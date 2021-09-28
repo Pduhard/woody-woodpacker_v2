@@ -7,7 +7,7 @@
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
-            "compilerArgs": ["-std=gnu11"],
+            "compilerArgs": ["-std=gnu11 -Wall -Wextra -Werror"],
             "cStandard": "c11",
             "cppStandard": "c++14",
             "intelliSenseMode": "gcc-x64"

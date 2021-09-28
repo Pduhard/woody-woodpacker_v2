@@ -1,17 +1,8 @@
 [BITS 64]
 
-; extern floor
-; extern ceil
-; extern pow
-; extern fabs
-; extern strlen
-; extern printf
-; extern scanf
-
 global blowfish_payload:function
 global power:function
 global get_floating_part:function
-; global get_floating_part:function
 global sigma:function
 global bbp_getnth_term:function
 global uint32_swap:function
@@ -26,7 +17,6 @@ global g_blowfish_pld_checksum_off:data
 global g_blowfish_pld_sec_vaddr_off:data
 global g_blowfish_pld_sec_size_off:data
 global g_blowfish_pld_vaddr_load_off:data
-; global bbp_call_rip:data
 
 g_blowfish_pld_len dd blowfish_end - blowfish_payload
 g_blowfish_pld_entry_off dd blowfish_entry - blowfish_payload
@@ -44,7 +34,6 @@ _strlen:
 
   push rbp
   mov rbp, rsp
-
   mov rax, 0
 
 strlen_loop_start:
@@ -777,8 +766,6 @@ blowfish_entry:
 
   sub rsp, 4256
 
-  ; jmp woody_decrypt_loop_end
-
   cmp dword [rel checksum], 0
   je blowfish_no_key
 
@@ -815,18 +802,8 @@ woody_call_blowfish_init:
 
 woody_call_blowfish_encrypt:
   call blowfish_encrypt_rip ; //blowfish_encrypt
-
-  ; mov rdi, 0x93c7659fb496b86c
   cmp rax, qword [rel checksum]
-  jne nok_start
-
-  mov rdi, 1
-  lea rsi, [rel ok]
-  mov rdx, len_ok
-  mov rax, 0x01
-  syscall 
-  jmp nok_end
-nok_start:
+  je nok_end
 
   mov rdi, 1
   lea rsi, [rel nok]
@@ -839,12 +816,9 @@ nok_start:
   syscall
 
 nok_end:
-
   jmp woody_decrypt
 
 blowfish_no_key:
-
-
   mov rdi, 0x0
   mov rsi, rsp
   add rsi, 64
@@ -886,40 +860,11 @@ woody_call_blowfish_decrypt:
   jmp woody_decrypt_loop
 woody_decrypt_loop_end:
 
-  ; mov rdi, rax
-  ; mov rax, 60
-
-  ; syscall
-
-  ; call blowfish_encrypt
-  ; mov rax [rel encrypted_sec_start]
-  ; mov rsi, rsp
-
-  ; mov edi, bbp_call_rip
-  ; add rdi, rip
-; bbp_getnth_term_offset:
-  ; mov eax, 
-  ; call -1342
-  ; [rel bbp_call_rip]
-  ; ask for key
-  ; init blowfish
-  ; verify checksum
-  ; bad ==> exit
-  ; decrypt section from encrypted_sec_start to encrypted_sec_en_offd
-
-  ; mov rdi, 1
-  ; mov rsi, rsp
-  ; mov rdx, 9
-  ; mov rax, 0x01
-  ; syscall
-
   mov rdi, 1
   lea rsi, [rel woody]
   mov rdx, len
   mov rax, 0x01
   syscall
-
-  
 
   add rsp, 4256
   pop rdx
@@ -931,15 +876,6 @@ woody_decrypt_loop_end:
   pop rbp
   jmp 0xffffffff
 blowfish_jmp:
-  nop
-  nop
-  nop
-  nop
-  nop
-  nop
-  nop
-  nop
-  nop
 
   _0001 dq 0.0001
   _0 dq 0.0
@@ -969,6 +905,4 @@ blowfish_checksum:
   blowfish_encrypt_rip equ blowfish_encrypt - woody_call_blowfish_encrypt - 1
   blowfish_init_rip equ blowfish_init - woody_call_blowfish_init - 1
   blowfish_init_no_key_rip equ blowfish_init - woody_call_blowfish_init_no_key - 1
-  ; bbp_call_rip dd blowfish_encrypt - bbp_getnth_term_offset - 1
 blowfish_end:
-

@@ -28,13 +28,10 @@ BIN_PATH	=	./bins/
 
 SRC			=	main.c		\
 				parse.c		\
-				elf.c		\
 				segment.c	\
 				section.c	\
-				bytecode.c	\
 				encrypt.c	\
 				payload.c	\
-				blowfish.c	\
 
 ASM_SRC		=	blowfish_payload.s	\
 				xor_payload.s		\
