@@ -27,7 +27,8 @@ SRC_PATH	=	./srcs/
 BIN_PATH	=	./bins/
 
 SRC			=	main.c		\
-				parse.c		\
+				option.c	\
+				elf.c		\
 				segment.c	\
 				section.c	\
 				encrypt.c	\
@@ -81,5 +82,6 @@ fclean: clean
 
 	@echo "\n${R}[REMOVING \"$(NAME)\"]"
 	@rm -f $(NAME)
+	@rm -f woody
 
 re: fclean all

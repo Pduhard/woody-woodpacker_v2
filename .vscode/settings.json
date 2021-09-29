@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "BLOWFISH.C": "cpp"
+        "BLOWFISH.C": "cpp",
+        "stat.h": "c"
     }
 }

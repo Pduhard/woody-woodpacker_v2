@@ -22,7 +22,6 @@ g_blowfish_pld_len dd blowfish_end - blowfish_payload
 g_blowfish_pld_entry_off dd blowfish_entry - blowfish_payload
 g_blowfish_pld_jmp_off dd blowfish_jmp - blowfish_payload
 g_blowfish_pld_checksum_off dd blowfish_checksum - blowfish_payload
-g_blowfish_pld_sec_vaddr_off dd blowfish_sec_vaddr - blowfish_payload
 g_blowfish_pld_sec_size_off dd blowfish_sec_size - blowfish_payload
 g_blowfish_pld_vaddr_load_off dd blowfish_vaddr_load - blowfish_payload
 
@@ -831,7 +830,7 @@ woody_call_blowfish_init_no_key:
 woody_decrypt:
 
   mov qword [rsp + 4240], 0
-  lea rax, [rel sec_vaddr]
+  lea rax, [rel sec_size] ; //will be changed
 blowfish_vaddr_load:
   mov qword [rsp + 4248], rax
 
@@ -889,8 +888,6 @@ blowfish_jmp:
   woody db "....WOODY.....", 10, 0
   len equ $ - woody
   _pi_cap dq 128
-blowfish_sec_vaddr:
-  sec_vaddr dq 0
 blowfish_sec_size:
   sec_size dq 0
 blowfish_checksum:
