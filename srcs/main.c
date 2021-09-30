@@ -18,7 +18,6 @@ int		mmap_file(t_file *file, char *file_name)
 		fprintf(stderr, "%sError: Invalid file%s\n", C_ERR, C_RES);
 		return ERROR;
 	}
-	fprintf(stderr, "%o\n", stat_buf.st_mode & __S_IFMT);
 	file->size = stat_buf.st_size;
 	if (!file->size)
 	{
@@ -79,7 +78,6 @@ void	print_woody(t_file *file)
 
 int 	main(int argc, char **argv)
 {
-	// t_data	file;
 	t_file	file;
 	
 	char	*file_name;

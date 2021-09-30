@@ -20,7 +20,6 @@ int blowfish_encryption(t_file *file)
     file->pld_len = g_blowfish_pld_len;
     file->pld_entry_off = g_blowfish_pld_entry_off;
     file->pld_jmp_off = g_blowfish_pld_jmp_off;
-    // file->pld_sec_vaddr_off = g_blowfish_pld_sec_vaddr_off;
     file->pld_sec_size_off = g_blowfish_pld_sec_size_off;
     file->pld_vaddr_load_off = g_blowfish_pld_vaddr_load_off;
     file->pld_checksum_off = g_blowfish_pld_checksum_off;
