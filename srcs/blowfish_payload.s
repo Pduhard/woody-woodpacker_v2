@@ -572,11 +572,6 @@ blowfish_init:
   mov qword [rsp + 24], rax ; key len 
 
 no_strlen:
-  ; mov rax, qword [rsp + 8]
-  ; mov qword [rsp + 30], rax ; p_fill
-  ; mov rax, qword [rsp + 8]
-  ; mov qword [rsp + 30], rax ; s_fill
-
   mov qword [rsp + 32], 0 ; i = 0
   mov qword [rsp + 40], 0 ; j = 0
   mov qword [rsp + 48], 0 ; n = 0
@@ -595,11 +590,6 @@ bbp_init_loop_start:
   add rdi, 64
   add rdi, qword [rsp + 32]
   mov byte [rdi], al
-
-  ; xor rsi, rsi
-  ; mov sil, byte [rdi]
-  ; lea rdi, [p_format]
-  ; call printf
 
   inc qword [rsp + 32]
   jmp bbp_init_loop_start
@@ -653,10 +643,6 @@ p_fill_loop_no_key:
   inc qword [rsp + 32]
   jmp bbp_p_fill_loop_start
 bbp_p_fill_loop_end:
-
-  ; mov rsp, rbp
-  ; pop rbp
-  ; ret
 
   mov qword [rsp + 32], 0
 

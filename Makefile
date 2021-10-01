@@ -17,7 +17,7 @@ NAME		=	woody_woodpacker
 
 CC			=	gcc
 NASM		= 	nasm
-CFLAGS		=	-no-pie -Wall -Werror -Wextra -lm -std=gnu11
+CFLAGS		=	-Wall -Werror -Wextra -lm -std=gnu11
 SFLAGS		=	-f elf64
 INC_DIR		=	./includes/
 INCLUDES	=	woody_woodpacker.h
@@ -59,14 +59,14 @@ N			=	\33[0m
 all: $(NAME)
 
 $(NAME): $(BINS) $(ASM_BINS)
-	@$(CC) $(CFLAGS) -I $(INC_DIR) -o $@ $^ -lm 
+	@$(CC) $(CFLAGS) -I $(INC_DIR) -o $@ $^ 
 	@echo "\n\n$(B)[EXECUTABLE \"$(NAME)\" READY]\n"
 
 
 $(BIN_PATH)%.o: $(SRC_PATH)%.c $(INCS)
 
 	@mkdir -p $(BIN_PATH) || true
-	@$(CC) $(CFLAGS) -I $(INC_DIR) -c -o $@ $< -lm && echo "${G} \c"
+	@$(CC) $(CFLAGS) -I $(INC_DIR) -c -o $@ $< && echo "${G} \c"
 
 $(BIN_PATH)%.o: $(SRC_PATH)%.s $(INCS)
 
